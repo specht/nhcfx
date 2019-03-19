@@ -1,0 +1,43 @@
+<html>
+<head>
+    <title>TCP Console</title>
+<!--     <link href="https://fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet"> -->
+    <link href="/styles.css" rel="stylesheet">
+    <script src="/bower_components/jquery/dist/jquery.min.js"></script>
+</head>
+
+<body>
+    <div id='messages'></div>
+    <div class='head'>
+        <div style='text-align: center; vertical-align: text-top;'>
+            <span class='rule'></span>
+            TCP Console
+            <span class='rule'></span>
+            <input type='text' id='host' placeholder='Host' size='24' />
+            <input type='text' id='port' placeholder='Port' size='5' />
+            <span class='rule'></span>
+            <label class="switch">
+                <input type="checkbox" id='tls'>
+                <span class="slider round"></span>
+            </label>
+            <span class='toggle_ssl noselect'>SSL</span>
+            <span class='rule'></span>
+            <button id='connect'>Connect</button>
+            <span class='rule'></span>
+        </div>
+    </div>
+    <div class='foot'>
+        <input id='input' type='text' style='width: calc(100% - 177px);' disabled />
+        <button id='send' style='width: 80px;' disabled>Send</button>
+        <button id='clear' style='width: 80px;'>Clear</button>
+        <div class='status'>
+        <div id='rate_limit' style='float: right;'></div>
+        &nbsp;
+<!--         <a href='/readme.html'>What's this?</a> |  -->
+<!--         <a href='/examples.html'>Examples</a> |  -->
+<!--         <a href='https://github.com/specht/tcpconsole'>Source Code</a> -->
+        
+        </div>
+    </div>
+</body>
+</html>

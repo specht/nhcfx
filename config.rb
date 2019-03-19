@@ -148,7 +148,7 @@ end
 FileUtils::mkpath(LOGS_PATH)
 if PROFILE.include?(:dynamic)
     FileUtils::cp('src/ruby/Gemfile', 'docker/ruby/')
-    FileUtils::mkpath(File::join(RAW_FILES_PATH, 'uploads'))
+    FileUtils::mkpath(File::join(RAW_FILES_PATH, 'cache'))
 end
 if PROFILE.include?(:neo4j)
     FileUtils::mkpath(NEO4J_DATA_PATH)
