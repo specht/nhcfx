@@ -1,42 +1,81 @@
 <html>
 <head>
-    <title>TCP Console</title>
+    <title>Dr. N. Harold Cham's Function Renderer</title>
 <!--     <link href="https://fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet"> -->
+    <link href="/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/styles.css" rel="stylesheet">
     <script src="/bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
+    <script src="nhcfx.js"></script>
 </head>
 
 <body>
-    <div id='messages'></div>
-    <div class='head'>
-        <div style='text-align: center; vertical-align: text-top;'>
-            <span class='rule'></span>
-            TCP Console
-            <span class='rule'></span>
-            <input type='text' id='host' placeholder='Host' size='24' />
-            <input type='text' id='port' placeholder='Port' size='5' />
-            <span class='rule'></span>
-            <label class="switch">
-                <input type="checkbox" id='tls'>
-                <span class="slider round"></span>
-            </label>
-            <span class='toggle_ssl noselect'>SSL</span>
-            <span class='rule'></span>
-            <button id='connect'>Connect</button>
-            <span class='rule'></span>
+    <ul class="nav nav-tabs">
+    <li class="nav-item">
+        <a class="nav-link active" href="#" class='mi mi_fx'>Function Renderer</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#" class='mi mi_gal'>Gallery</a>
+    </li>
+    <li class="nav-item">
+        <a class="nav-link" href="#" class='mi mi_doc'>Documentation</a>
+    </li>
+    </ul>
+    <div class='sidebar'>
+        <div id='sb_fx'>
+            <div class='row'>
+            <strong>Function Renderer</strong>
+            <hr />
+            </div>
+            <div class='row'>
+                <form>
+                    <div class="form-group">
+                        <label for="formGroupExampleInput">Term / Equation</label>
+                        <input type="text" class="form-control" id="f" value='sin x'>
+                    </div>
+                    <div class="form-group">
+                        <label for="formGroupExampleInput2">Resolution</label>
+                        <div class="input-group mb-2">
+                            <input type="number" min="1" max="1200" class="form-control" id="dpi" value='150'>
+                            <div class="input-group-append">
+                            <div class="input-group-text">dpi</div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <!--
+                options[:range] ||= [-8, -4, 8, 4]
+                options[:padding] ||= [5, 5, 5, 5]
+                options[:scale] ||= 1.0 # 1 unit equals n cm
+                options[:tick_length] ||= 1.0
+                options[:font_size] ||= 3
+                options[:label_padding] ||= 0.1
+                options[:dpi] ||= 150
+                options[:line_width] ||= 0.4
+                options[:aa_level] ||= 2
+                options[:pen_points] ||= 8
+                options[:color] ||= '#000000'
+                options[:f] ||= []
+                options[:grid] ||= [{'space' => 0.5, 'color' => '#aaa', 'width' => 0.05}, 
+                                    {'space' => 1.0, 'color' => '#888', 'width' => 0.05}]
+                -->
+                <button id='render' class='btn btn btn-primary'>Render</button>
+                <hr />
+                <div id='dl_buttons'></div>
+            </div>
+        </div>
+        <div id='sb_doc'>
         </div>
     </div>
-    <div class='foot'>
-        <input id='input' type='text' style='width: calc(100% - 177px);' disabled />
-        <button id='send' style='width: 80px;' disabled>Send</button>
-        <button id='clear' style='width: 80px;'>Clear</button>
-        <div class='status'>
-        <div id='rate_limit' style='float: right;'></div>
-        &nbsp;
-<!--         <a href='/readme.html'>What's this?</a> |  -->
-<!--         <a href='/examples.html'>Examples</a> |  -->
-<!--         <a href='https://github.com/specht/tcpconsole'>Source Code</a> -->
-        
+    <div class='container'>
+        <div id='cn_fx'>
+            <div class='row'>
+                <div id='graph'></div>
+            </div>
+        </div>
+        <div id='cn_doc'>
+            <div class='row'>
+            </div>
         </div>
     </div>
 </body>

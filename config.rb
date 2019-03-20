@@ -70,16 +70,16 @@ if PROFILE.include?(:static)
 
             charset utf-8;
 
-            location / {
-                root /usr/share/nginx/html;
+            location /cache {
+                root /raw;
             }
 
-            location /ws {
+            location /api {
                 proxy_pass http://#{PROJECT_NAME}_ruby_1:9292;
-                proxy_set_header Host $host;
-                proxy_http_version 1.1;
-                proxy_set_header Upgrade $http_upgrade;
-                proxy_set_header Connection Upgrade;
+            }
+
+            location / {
+                root /usr/share/nginx/html;
             }
         }
 

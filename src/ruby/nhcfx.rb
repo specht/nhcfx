@@ -3,11 +3,9 @@
 # r = 3 + sin(phi * 2) * 0.5
 # r = 3 + sin(phi * 4) * 0.5
 # r = 3 + sin(phi * 3) * 0.5
-# r = 3 + sin(phi * 4) * 0.5
-# r = 3 + sin(phi * 2) * 0.5
-# r = 3 + sin(atan2(y, fabs(x)) * 2) * 0.5
-# r = 3 + sin(atan2(y, fabs(x)) * 2) * 0.8
-# r = 3 + sin(atan2(y, fabs(x)) * 2) * 0.7
+# r = 3 + sin(atan2(y, abs(x)) * 2) * 0.5
+# r = 3 + sin(atan2(y, abs(x)) * 2) * 0.8
+# r = 3 + sin(atan2(y, abs(x)) * 2) * 0.7
 # r = 3 + pow(sin(phi * 16), 2) * 0.5
 # r = 3 + pow(sin(phi * 16), 2) * 1
 # r = 3 + pow(sin(phi * 16), 8) * 1
@@ -326,7 +324,7 @@ def render_function_to_svg(options = {})
             f.write(svg)
         end
     end
-    svg_path
+    tag
 end
 
 if File.absolute_path(__FILE__) == File.absolute_path($0)

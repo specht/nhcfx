@@ -1,139 +1,73 @@
-require 'sinatra/base'
-require 'faye/websocket'
 require 'json'
-require 'socket'
+require 'open3'
 require 'openssl'
+require 'sinatra/base'
+require 'socket'
 require 'timeout'
 require 'yaml'
 
-RATE_LIMIT = 1024 # bytes per second, set to 0 to turn off
+require './nhcfx.rb'
 
 class Main < Sinatra::Base
-    use Rack::Auth::Basic, "Protected Area" do |username, password|
-      username == 'heese' && password == '226'
+    def assert(condition, message = 'assertion failed')
+        raise message unless condition
     end
 
-    @@clients = {}
-    
-    get '/ws' do
-        if Faye::WebSocket.websocket?(request.env)
-            ws = Faye::WebSocket.new(request.env)
-            
-            ws.on(:open) do |event|
-                ws.send({:hello => 'world', :rate_limit => RATE_LIMIT}.to_json)
-            end
-
-            ws.on(:close) do |event|
-            end
-
-            ws.on(:message) do |msg|
-#                 STDERR.puts request.to_yaml
-                client_id = request.env['HTTP_SEC_WEBSOCKET_KEY']
-                begin
-                    request = {}
-                    unless msg.data.empty?
-                        request = JSON.parse(msg.data)
-                        STDERR.puts request.to_json
-                    end
-                    if request['action'] == 'open'
-                        begin
-                            Timeout::timeout(10) do
-                                raise 'Invalid port' if request['port'].nil? || request['port'] <= 0 || request['port'] > 0xffff
-                                @@clients[client_id] = TCPSocket.new(request['host'], request['port'])
-                                @@clients[client_id].set_encoding('UTF-8')
-                                if request['tls']
-                                    ssl_context = OpenSSL::SSL::SSLContext.new()
-    #                                 ssl_context.ssl_version = :SSLv23
-                                    @@clients[client_id] = OpenSSL::SSL::SSLSocket.new(@@clients[client_id], ssl_context)
-                                    @@clients[client_id].sync_close = true
-                                    @@clients[client_id].connect
-                                    @@clients[client_id].io.set_encoding('UTF-8')
-                                end
-                            end
-                        rescue StandardError => e
-                            @@clients.delete(client_id)
-                            ws.send({:connection_error => e.to_s, :host => request['host'], :port => request['port'], :tls => request['tls']}.to_json)
-                        end
-                        if @@clients[client_id]
-                            ws.send({:connected => true, :host => request['host'], :port => request['port'], :tls => request['tls'], :address => @@clients[client_id].peeraddr[3]}.to_json)
-                            STDERR.puts @@clients[client_id].inspect
-                            Thread.new do 
-                                while true do
-                                    break if @@clients[client_id].closed? || @@clients[client_id].eof?
-                                    s = IO.select([@@clients[client_id]])
-                                    t = Time.now.to_f
-                                    bytes_read = 0
-                                    while true do
-                                        buffer = nil
-                                        begin
-                                            if RATE_LIMIT == 0
-                                                buffer = @@clients[client_id].read_nonblock(4096)
-                                            else
-                                                while Time.now.to_f < t + bytes_read.to_f / RATE_LIMIT
-                                                    sleep 0.1
-                                                end
-                                                buffer = @@clients[client_id].read_nonblock(RATE_LIMIT)
-                                                bytes_read += buffer.size
-                                            end
-                                            buffer.force_encoding(Encoding::UTF_8)
-                                            buffer.encode!(Encoding::UTF_16LE, invalid: :replace, replace: "\uFFFD")
-                                            buffer.encode!(Encoding::UTF_8)
-                                        rescue StandardError => e
-                                            STDERR.puts e
-                                            break
-                                        end
-                                        if buffer
-                                            STDERR.puts "Received #{buffer.size} bytes."
-                                            ws.send({:message => buffer}.to_json)
-                                        end
-                                        break if @@clients[client_id].closed?
-                                    end
-                                    break if @@clients[client_id].closed?
-                                end
-                                STDERR.puts "socket closed"
-                                ws.send({:connected => false}.to_json)
-                            end
-                        end
-                    elsif request['action'] == 'send'
-                        if @@clients[client_id]
-                            msg = request['message'].strip + "\r\n"
-                            if RATE_LIMIT == 0
-                                @@clients[client_id].write(msg)
-                            else
-                                t = Time.now.to_f
-                                bytes_sent = 0
-                                while !msg.empty?
-                                    while Time.now.to_f < t + bytes_sent.to_f / RATE_LIMIT
-                                        sleep 0.1
-                                    end
-                                    chunk = msg.slice!(0, RATE_LIMIT)
-                                    @@clients[client_id].write(chunk)
-                                    bytes_sent += chunk.size
-                                end
-                            end
-                        end
-                    elsif request['action'] == 'close'
-                        begin
-                            @@clients[client_id].close
-                        rescue
-                        end
-                        ws.send({:connected => false}.to_json)
-                    end
-                rescue StandardError => e
-                    STDERR.puts e
-                end
-            end
-
-            ws.rack_response
+    def test_request_parameter(data, key, options)
+        type = ((options[:types] || {})[key]) || String
+        assert(data[key.to_s].is_a?(type), "#{key.to_s} is a #{type}")
+        if type == String
+            assert(data[key.to_s].size <= (options[:max_value_lengths][key] || options[:max_string_length]), 'too_much_data')
         end
     end
     
-    post '/api' do
-        {:hello => 'world', :clients => @@clients.keys}.to_json
+    def parse_request_data(options = {})
+        options[:max_body_length] ||= 256
+        options[:max_string_length] ||= 256
+        options[:required_keys] ||= []
+        options[:optional_keys] ||= []
+        options[:max_value_lengths] ||= {}
+        data_str = request.body.read(options[:max_body_length]).to_s
+        @latest_request_body = data_str.dup
+        begin
+            assert(data_str.is_a? String)
+            assert(data_str.size < options[:max_body_length], 'too_much_data')
+            data = JSON::parse(data_str)
+            @latest_request_body_parsed = data.dup
+            result = {}
+            options[:required_keys].each do |key|
+                assert(data.include?(key.to_s))
+                test_request_parameter(data, key, options)
+                result[key.to_sym] = data[key.to_s]
+            end
+            options[:optional_keys].each do |key|
+                if data.include?(key.to_s)
+                    test_request_parameter(data, key, options)
+                    result[key.to_sym] = data[key.to_s]
+                end
+            end
+            result
+        rescue
+            STDERR.puts "Request was:"
+            STDERR.puts data_str
+            raise
+        end
     end
     
-    get '/ws/boo' do
-        'BOOO1!!!!'
+    def respond(hash = {})
+        @respond_hash = hash
+    end
+    
+    after '/api/*' do
+        @respond_hash ||= {}
+        response.body = @respond_hash.to_json
+    end
+    
+    post '/api/render' do
+        data = parse_request_data(:optional_keys => [:f],
+                                  :types => {:f => Array})
+        tag = render_function_to_svg(data)
+        respond(:tag => tag, :svg => File.read("/raw/cache/#{tag}.svg"))
     end
     
     run! if app_file == $0
