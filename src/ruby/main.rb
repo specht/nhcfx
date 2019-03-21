@@ -64,8 +64,12 @@ class Main < Sinatra::Base
     end
     
     post '/api/render' do
-        data = parse_request_data(:optional_keys => [:f],
-                                  :types => {:f => Array})
+        data = parse_request_data(:optional_keys => [:f, :dpi, :scale],
+                                  :types => {
+                                             :f => Array,
+                                             :dpi => Numeric,
+                                             :scale => Numeric
+                                            })
         tag = render_function_to_svg(data)
         respond(:tag => tag, :svg => File.read("/raw/cache/#{tag}.svg"))
     end

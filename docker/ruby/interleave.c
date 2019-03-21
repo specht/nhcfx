@@ -4,16 +4,12 @@
 
 void main(int argc, char** argv)
 {
-    unsigned char r = atoi(argv[1]);
-    unsigned char g = atoi(argv[2]);
-    unsigned char b = atoi(argv[3]);
-    unsigned char a = 0;
+    unsigned char rgba[4];
+    for (int i = 0; i < 3; i++)
+        rgba[i] = atoi(argv[i + 1]);
     while (!feof(stdin))
     {
-        fread(&a, 1, 1, stdin);
-        fwrite(&r, 1, 1, stdout);
-        fwrite(&g, 1, 1, stdout);
-        fwrite(&b, 1, 1, stdout);
-        fwrite(&a, 1, 1, stdout);
+        fread(rgba + 3, 1, 1, stdin);
+        fwrite(rgba, 4, 1, stdout);
     }
 }

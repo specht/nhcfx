@@ -1,18 +1,6 @@
 #!/usr/bin/env ruby
 
-# r = 3 + sin(phi * 2) * 0.5
-# r = 3 + sin(phi * 4) * 0.5
-# r = 3 + sin(phi * 3) * 0.5
-# r = 3 + sin(atan2(y, abs(x)) * 2) * 0.5
-# r = 3 + sin(atan2(y, abs(x)) * 2) * 0.8
-# r = 3 + sin(atan2(y, abs(x)) * 2) * 0.7
-# r = 3 + pow(sin(phi * 16), 2) * 0.5
-# r = 3 + pow(sin(phi * 16), 2) * 1
-# r = 3 + pow(sin(phi * 16), 8) * 1
-# r = 2 + pow(sin(phi * 16), 8) * 2.5
-# r = 2 + pow(sin(phi * 16 + r), 8) * 2.5
-# r = 2 + pow(sin(phi * 16 + r * 4), 8) * 2.5
-# r = 3 - pow(pow(sin(phi * 2), 2), 16)/2
+# rm /raw/cache/*; time echo '{"f":[{"f":"atan2(y, x) = sin(r*3)*pi","color":"#204a87"}],"range":[-8,-4,8,4],"padding":[5,5,5,5],"scale":1.0,"tick_length":1.0,"font_size":3,"label_padding":0.1,"dpi":150,"line_width":0.4,"aa_level":2,"pen_points":8,"color":"#000000","grid":[{"space":0.5,"color":"#aaa","width":0.05},{"space":1.0,"color":"#888","width":0.05}]}' | ./nhcfx.rb
 
 require 'base64'
 require 'digest'
@@ -78,7 +66,7 @@ def render_function_to_svg(options = {})
     options[:f] ||= []
     options[:grid] ||= [{'space' => 0.5, 'color' => '#aaa', 'width' => 0.05}, 
                         {'space' => 1.0, 'color' => '#888', 'width' => 0.05}]
-
+    
     xmin, ymin, xmax, ymax = *options[:range]
     padding = options[:padding]
     scale = options[:scale]
@@ -256,6 +244,7 @@ def render_function_to_svg(options = {})
                         src_sha1 = Digest::SHA1.hexdigest(src)
                         fx_png_path = File.join(dir, src_sha1 + '.fx.png')
                         fx_txt_path = File.join(dir, src_sha1 + '.fx.txt')
+                        STDERR.puts fx_png_path
                         unless File.exists?(fx_png_path) && File.exists?(fx_txt_path)
                             fsrc = Tempfile.new(['nhcfx', '.c'])
                             fmakefile = Tempfile.new('nhcfx_makefile')

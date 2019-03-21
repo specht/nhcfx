@@ -52,7 +52,8 @@ float subdivide(float sx, float sy, int level, int max_level)
                 count += 1;
         }
     }
-    if (level < max_level)
+    // adaptive super sampling
+    if (count != 0 && count != 4 && level < max_level)
     {
         return (subdivide(sx, sy, level + 1, max_level) +
                 subdivide(sx + step2, sy, level + 1, max_level) +

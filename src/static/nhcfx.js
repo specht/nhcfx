@@ -63,6 +63,7 @@ $(document).ready(function() {
         var options = {};
         options.f = [{f: f, color: '#204a87'}];
         options.dpi = parseInt($('#dpi').val());
+        options.scale = parseFloat($('#scale').val());
         console.log(options);
         api_call('/api/render', options, function(data) {
             $('#graph').empty();
