@@ -73,6 +73,7 @@ $(document).ready(function() {
             $('#dl_buttons').append(dl_svg);
         });
     });
-    $('#f').val('atan2(y, abs(x)) = cos(r*3)');
+//     $('#f').val('atan2(y, abs(x)) = cos(r*3)');
+    $('#f').val('r < 3');
     $('#render').click();
 });

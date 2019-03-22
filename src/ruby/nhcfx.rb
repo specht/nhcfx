@@ -1,6 +1,7 @@
 #!/usr/bin/env ruby
 
 # rm /raw/cache/*; time echo '{"f":[{"f":"atan2(y, x) = sin(r*3)*pi","color":"#204a87"}],"range":[-8,-4,8,4],"padding":[5,5,5,5],"scale":1.0,"tick_length":1.0,"font_size":3,"label_padding":0.1,"dpi":150,"line_width":0.4,"aa_level":2,"pen_points":8,"color":"#000000","grid":[{"space":0.5,"color":"#aaa","width":0.05},{"space":1.0,"color":"#888","width":0.05}]}' | ./nhcfx.rb
+# rm /raw/cache/*; echo '{"f":[{"f": "r < 3", "color":"#204a87"}]}' | ./nhcfx.rb
 
 require 'base64'
 require 'digest'
@@ -90,15 +91,29 @@ def render_function_to_svg(options = {})
     end
     
     options[:f].map! do |f|
+        which = nil
         v = f['f']
-        unless v.include?('=')
-            v = 'y = ' + v
+        if v.include?('<')
+            f['src'] = 'nhcfx_lt.c'
+            parts = v.split('<').map { |x| x.strip }
+            v = "(#{parts[0]}) - (#{parts[1]})"
+        elsif v.include?('>')
+            f['src'] = 'nhcfx_lt.c'
+            parts = v.split('>').map { |x| x.strip }
+            v = "(#{parts[1]}) - (#{parts[0]})"
+        else
+            unless v.include?('=')
+                v = 'y = ' + v
+            end
+            parts = v.split('=').map { |x| x.strip }
+            v = "(#{parts[0]}) - (#{parts[1]})"
+            f['src'] = 'nhcfx_eq.c'
         end
-        parts = v.split('=').map { |x| x.strip }
-        v = "(#{parts[0]}) - (#{parts[1]})"
         f['f'] = v
         f
     end
+    
+    STDERR.puts svg_path
     
     unless File.exists?(svg_path)
 
@@ -219,14 +234,14 @@ def render_function_to_svg(options = {})
                     # draw function
                     pixel_width = (graph_width * dpi / 25.4).to_i
                     pixel_height = (graph_height * dpi / 25.4).to_i
-                    original_src = File.read('/src/nhcfx.c')
                     options[:f].each do |function_entry|
                         function = function_entry['f']
                         function_name = function_entry['label']
                         function_color = function_entry['color']
                         function_color ||= options[:color]
-                        raise '; not allowed in function' if function.include?(';')
-                        src = original_src.dup
+                        function_opacity = function_entry['opacity']
+                        function_opacity ||= 1.0
+                        src = File.read('/src/' + function_entry['src'])
                         src.gsub!('#{WIDTH}', "#{pixel_width}")
                         src.gsub!('#{HEIGHT}', "#{pixel_height}")
                         src.gsub!('#{XL}', "#{xmin}")
@@ -268,10 +283,10 @@ def render_function_to_svg(options = {})
                                         ["convert -size #{pixel_width}x#{pixel_height} -depth 8 gray:- \"#{fx_png_path}\""])
     #                         t1 = Time.now.to_f; puts "Render raw: #{t1 - t0}"; t0 = t1
                         end
-                        
+
                         stdout, thread = Open3.pipeline_r(
                             "convert \"#{fx_png_path}\" gray:/dev/stdout",
-                            "/interleave #{function_color[1, 2].to_i(16)} #{function_color[3, 2].to_i(16)} #{function_color[5, 2].to_i(16)}",
+                            "/interleave #{function_color[1, 2].to_i(16)} #{function_color[3, 2].to_i(16)} #{function_color[5, 2].to_i(16)} #{(function_opacity * 255).to_i}",
                             "convert -size #{pixel_width}x#{pixel_height} -depth 8 rgba:- png32:-")
                         png_base64 = Base64.strict_encode64(stdout.read)
                         stdout.close
@@ -280,7 +295,11 @@ def render_function_to_svg(options = {})
                         xml.image('xlink:href' => 'data:image/png;base64,' + png_base64, 
                                 :x => padding[3], :y => padding[0],
                                 :width => graph_width, :height => graph_height)
-                        label_pos = File.read(fx_txt_path).strip.split(' ').map { |x| x.to_i }
+                        label_pos = [-1, -1]
+                        begin
+                            label_pos = File.read(fx_txt_path).strip.split(' ').map { |x| x.to_i }
+                        rescue
+                        end
                         if label_pos != [-1, -1]
                             lx = label_pos[0]
                             ly = label_pos[1]

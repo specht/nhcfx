@@ -67,6 +67,11 @@ float subdivide(float sx, float sy, int level, int max_level)
 void main(int argc, char** argv)
 {
     n = te_compile("#{FUNCTION}", vars, 4, &err);
+    if (err)
+    {
+        fprintf(stderr, "te_compile_error:%d\n", err);
+        exit(1);
+    }
     unsigned char* buffer;
     pd = malloc(sizeof(float) * 2 * np);
     float ssx = dx * 0.001;
