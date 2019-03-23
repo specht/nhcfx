@@ -64,12 +64,42 @@ class Main < Sinatra::Base
     end
     
     post '/api/render' do
-        data = parse_request_data(:optional_keys => [:f, :dpi, :scale],
-                                  :types => {
-                                             :f => Array,
-                                             :dpi => Numeric,
-                                             :scale => Numeric
-                                            })
+        data = parse_request_data(
+#     options[:range] ||= [-8, -4, 8, 4]
+#     options[:padding] ||= [5, 5, 5, 5]
+#     options[:scale] ||= 1.0 # 1 unit equals n cm
+#     options[:tick_length] ||= 1.0
+#     options[:font_size] ||= 3
+#     options[:label_padding] ||= 0.1
+#     options[:dpi] ||= 150
+#     options[:line_width] ||= 0.4
+#     options[:aa_level] ||= 2
+#     options[:pen_points] ||= 8
+#     options[:color] ||= '#000000'
+#     options[:f] ||= []
+#     options[:grid] ||= [{'space' => 0.5, 'color' => '#aaa', 'width' => 0.05}, 
+#                         {'space' => 1.0, 'color' => '#888', 'width' => 0.05}]
+            :optional_keys => [
+                :f, :range, :padding, :scale, :tick_length,
+                :font_size, :label_padding, :dpi, :line_width,
+                :aa_level, :pen_points, :color, :grid
+            ],
+            :max_body_length => 8192,
+            :types => {
+                :f => Array,
+                :range => Array,
+                :padding => Array,
+                :scale => Numeric,
+                :tick_length => Numeric,
+                :font_size => Numeric,
+                :label_padding => Numeric,
+                :dpi => Numeric,
+                :line_width => Numeric,
+                :aa_level => Numeric,
+                :pen_points => Numeric,
+                :color => String,
+                :grid => Array
+            })
         tag = render_function_to_svg(data)
         respond(:tag => tag, :svg => File.read("/raw/cache/#{tag}.svg"))
     end

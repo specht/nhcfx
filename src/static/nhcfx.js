@@ -50,13 +50,16 @@ function api_call(url, data, callback, options)
 }
 
 $(document).ready(function() {
-    $('.mi').click(function() {
-        $('#sb_fx').hide();
-        $('#sb_doc').show();
-        $('#cn_fx').hide();
-        $('#cn_doc').show();
+    $('.sb_fx').show();
+    $('.cn_fx').show();
+    $('.mi').click(function(e) {
+        $('.sb').hide();
+        $('.cn').hide();
         $('.mi').removeClass('active');
-        $('.mi_doc').addClass('active');
+        var which = $(e.target).attr('mi');
+        $('.sb_' + which).show();
+        $('.cn_' + which).show();
+        $('.mi_' + which).addClass('active');
     });
     $('#render').click(function() {
         var f = $('#f').val();
@@ -73,7 +76,45 @@ $(document).ready(function() {
             $('#dl_buttons').append(dl_svg);
         });
     });
-//     $('#f').val('atan2(y, abs(x)) = cos(r*3)');
-    $('#f').val('r < 3');
+    jQuery.each(['sin x', 'cos x', 'tan x', 'x^2', '1/x', 
+                 'ln x', 'e^x', 'sqrt(x)', 'sin x / x', 
+                 '3*x^2 - 2*x^3', 
+                 'r = 3', 
+                 'r = 3 + sin(phi*2)^2',
+                 'r = 3 + sin(phi * 4) * 0.5',
+                 'r = 3 - pow(pow(sin(phi * 2), 2), 16)/2',
+                 'r = 2 + pow(sin(phi * 16 + r * 4), 8) * 2.5',
+                 'r = 3 + sin(atan2(y, abs(x)) * 2) * 0.8',
+                 'r = 3 + sin(5* phi)^11',
+                 'phi = cos(r*3)*pi',
+                 'phi = tan(3*r)/5',
+                 'phi = cos(r*3)',
+                 'atan2(y, abs(x)) = sin(r*3)^4',
+                 'atan2(y, abs(x)) = sin(r*3)^11',
+                 'atan2(y, abs(x)) = cos(r*3)*pi/2',
+                 'atan2(y, abs(x)) = cos(r*3)*pi',
+                 'atan2(y, abs(x)) = cos(r*30)',
+                 'atan2(y, abs(x)) = tan(r*3)',
+                 'atan2(y, abs(x)) = ln(r*3)',
+                ], function(_, f) {
+        var div = $('<div>').attr('id', 'gal_' + _).addClass('gallery_graph');
+        $('.gallery_graphs').append(div);
+        options = {};
+        options.range = [-4, -4, 4, 4];
+        options.padding = [5, 5, 5, 5];
+        options.scale = 0.5;
+        if (f.indexOf('=') === -1)
+            f = 'y = ' + f;
+        options.f = [{f: f.replace('=', '<'), color: '#729fcf', opacity: 0.3}, {f: f, color: '#204a87'}];
+//         options.f = [{f: f, color: '#204a87'}];
+        options.grid = [{space: 1.0, color: '#888', width: 0.05}];
+        options.font_size = 2.5;
+        options.tick_length = 0.7;
+        api_call('/api/render', options, function(data) {
+            $('#gal_' + _).html(data.svg);
+        });
+    });
+    $('#f').val('atan2(y, abs(x)) = cos(r*3)');
+//     $('#f').val('r < 3');
     $('#render').click();
 });

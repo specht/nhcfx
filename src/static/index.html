@@ -12,20 +12,20 @@
 <body>
     <ul class="nav nav-tabs">
     <li class="nav-item">
-        <a class="nav-link active" href="#" class='mi mi_fx'>Function Renderer</a>
+        <a class="nav-link active mi mi_fx" mi='fx' href='#'>Function Renderer</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="#" class='mi mi_gal'>Gallery</a>
+        <a class="nav-link mi mi_gal" mi='gal' href='#'>Gallery</a>
     </li>
     <li class="nav-item">
-        <a class="nav-link" href="#" class='mi mi_doc'>Documentation</a>
+        <a class="nav-link mi mi_doc" mi='doc' href='#'>Documentation</a>
     </li>
     </ul>
     <div class='sidebar'>
-        <div id='sb_fx'>
+        <div class='sb sb_fx'>
             <div class='row'>
-            <strong>Function Renderer</strong>
-            <hr />
+                <strong>Function Renderer</strong>
+                <hr />
             </div>
             <div class='row'>
                 <form>
@@ -73,17 +73,38 @@
                 <div id='dl_buttons'></div>
             </div>
         </div>
-        <div id='sb_doc'>
+        <div class='sb sb_gal'>
+            <div class='row'>
+                <strong>Gallery</strong>
+                <hr />
+            </div>
+        </div>
+        <div class='sb sb_doc'>
+            <div class='row'>
+                <strong>Documentation</strong>
+                <hr />
+            </div>
         </div>
     </div>
     <div class='container'>
-        <div id='cn_fx'>
+        <div class='cn cn_fx'>
             <div class='row'>
                 <div id='graph'></div>
             </div>
         </div>
-        <div id='cn_doc'>
+        <div class='cn cn_gal'>
+            <div class='row gallery_graphs'>
+            </div>
+        </div>
+        <div class='cn cn_doc'>
             <div class='row'>
+                <div class='col-12'>
+<!--                     <h2>Documentation</h2> -->
+<!--                     <h3>Source code</h3> -->
+                    <p>
+                    Find the source code here: <a href='https://github.com/specht/nhcfx/'>https://github.com/specht/nhcfx/</a>
+                    </p>
+                </div>
             </div>
         </div>
     </div>

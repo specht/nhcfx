@@ -139,6 +139,69 @@ def render_function_to_svg(options = {})
             end
         end
         
+        pixel_width = (graph_width * dpi / 25.4).to_i
+        pixel_height = (graph_height * dpi / 25.4).to_i
+        dx = (xmax.to_f - xmin) / pixel_width
+        dy = (ymin.to_f - ymax) / pixel_height
+        
+        options[:f].each do |function_entry|
+            function = function_entry['f']
+            function_name = function_entry['label']
+            function_color = function_entry['color']
+            function_color ||= options[:color]
+            function_opacity = function_entry['opacity']
+            function_opacity ||= 1.0
+            src = File.read('/src/' + function_entry['src'])
+            src.gsub!('#{WIDTH}', "#{pixel_width}")
+            src.gsub!('#{HEIGHT}', "#{pixel_height}")
+            src.gsub!('#{XL}', "#{xmin}")
+            src.gsub!('#{YT}', "#{ymax}")
+            src.gsub!('#{DX}', "#{dx}")
+            src.gsub!('#{DY}', "#{dy}")
+            src.gsub!('#{FUNCTION}', function)
+            src.gsub!('#{LINE_WIDTH}', "#{options[:line_width] * dpi / 25.4}")
+            src.gsub!('#{PEN_POINTS}', "#{options[:pen_points]}")
+            src.gsub!('#{AA_LEVEL}', "#{options[:aa_level]}")
+            src.gsub!('//(R)', '') if function.include?('r')
+            src.gsub!('//(PHI)', '') if function.include?('phi')
+            src_sha1 = Digest::SHA1.hexdigest(src)
+            function_entry[:src_sha1] = src_sha1
+            fx_png_path = File.join(dir, src_sha1 + '.fx.png')
+            fx_txt_path = File.join(dir, src_sha1 + '.fx.txt')
+#             STDERR.puts fx_png_path
+            unless File.exists?(fx_png_path) && File.exists?(fx_txt_path)
+                fsrc = Tempfile.new(['nhcfx', '.c'])
+                fmakefile = Tempfile.new('nhcfx_makefile')
+                fbin_path = fsrc.path.sub('.c', '')
+                fsrc.write(src)
+                fsrc.close
+                fmakefile.close
+                File.open(fmakefile.path, 'w') do |f|
+                    makefile = File.read('/src/Makefile')
+                    makefile.gsub!('nhcfx', File.basename(fsrc.path).sub('.c', ''))
+                    f.write(makefile)
+                end
+                system("make -C \"#{File.dirname(fmakefile.path)}\" -f \"#{fmakefile.path}\"")
+#                         t0 = Time.now.to_f
+                
+#                         t1 = Time.now.to_f; puts "Compile: #{t1 - t0}"; t0 = t1
+                unless File.exists?(fbin_path)
+                    raise "Error compiling C source using function: #{function}"
+                end
+                Open3.pipeline([fbin_path, fx_txt_path], 
+                            ["convert -size #{pixel_width}x#{pixel_height} -depth 8 gray:- \"#{fx_png_path}\""])
+#                         t1 = Time.now.to_f; puts "Render raw: #{t1 - t0}"; t0 = t1
+            end
+
+            stdout, thread = Open3.pipeline_r(
+                "convert \"#{fx_png_path}\" gray:/dev/stdout",
+                "/interleave #{function_color[1, 2].to_i(16)} #{function_color[3, 2].to_i(16)} #{function_color[5, 2].to_i(16)} #{(function_opacity * 255).to_i}",
+                "convert -size #{pixel_width}x#{pixel_height} -depth 8 rgba:- png32:-")
+            png_base64 = Base64.strict_encode64(stdout.read)
+            stdout.close
+            function_entry[:png] = png_base64
+        end
+#                         t1 = Time.now.to_f; puts "Interleave: #{t1 - t0}"; t0 = t1
         builder = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|
             o = {
                 'xmlns:dc' => 'http://purl.org/dc/elements/1.1/',
@@ -162,6 +225,19 @@ def render_function_to_svg(options = {})
                 xml.g do
                     xml.rect(:x => 0, :y => 0, :width => width, :height => height,
                             :style => 'fill:#fff; stroke: none;')
+                    
+                    # draw 'lt' functions
+                    options[:f].each do |function_entry|
+                        function_name = function_entry['label']
+                        function_color = function_entry['color']
+                        function_color ||= options[:color]
+                        function_opacity = function_entry['opacity']
+                        function_opacity ||= 1.0
+                        next unless function_entry['src'] == 'nhcfx_lt.c'
+                        xml.image('xlink:href' => 'data:image/png;base64,' + function_entry[:png], 
+                                :x => padding[3], :y => padding[0],
+                                :width => graph_width, :height => graph_height)
+                    end
                     
                     # draw grid lines (clipped against graph area)
                     xml.g('clip-path': 'url(#a)') do
@@ -231,70 +307,27 @@ def render_function_to_svg(options = {})
                     sx, sy = t.t(0, ymax)
                     xml << "<text x='#{sx - tick_length * 0.5 - label_padding * font_size}' y='#{sy - (label_padding + 1.0) * font_size + tick_length}' text-anchor='end' style='font-family: Arial; font-size: #{font_size}px;'>y</text>"
                     
-                    # draw function
-                    pixel_width = (graph_width * dpi / 25.4).to_i
-                    pixel_height = (graph_height * dpi / 25.4).to_i
+                    # draw 'eq' functions
                     options[:f].each do |function_entry|
-                        function = function_entry['f']
                         function_name = function_entry['label']
                         function_color = function_entry['color']
                         function_color ||= options[:color]
                         function_opacity = function_entry['opacity']
                         function_opacity ||= 1.0
-                        src = File.read('/src/' + function_entry['src'])
-                        src.gsub!('#{WIDTH}', "#{pixel_width}")
-                        src.gsub!('#{HEIGHT}', "#{pixel_height}")
-                        src.gsub!('#{XL}', "#{xmin}")
-                        src.gsub!('#{YT}', "#{ymax}")
-                        dx = (xmax.to_f - xmin) / pixel_width
-                        dy = (ymin.to_f - ymax) / pixel_height
-                        src.gsub!('#{DX}', "#{dx}")
-                        src.gsub!('#{DY}', "#{dy}")
-                        src.gsub!('#{FUNCTION}', function)
-                        src.gsub!('#{LINE_WIDTH}', "#{options[:line_width] * dpi / 25.4}")
-                        src.gsub!('#{PEN_POINTS}', "#{options[:pen_points]}")
-                        src.gsub!('#{AA_LEVEL}', "#{options[:aa_level]}")
-                        src.gsub!('//(R)', '') if function.include?('r')
-                        src.gsub!('//(PHI)', '') if function.include?('phi')
-                        src_sha1 = Digest::SHA1.hexdigest(src)
-                        fx_png_path = File.join(dir, src_sha1 + '.fx.png')
-                        fx_txt_path = File.join(dir, src_sha1 + '.fx.txt')
-                        STDERR.puts fx_png_path
-                        unless File.exists?(fx_png_path) && File.exists?(fx_txt_path)
-                            fsrc = Tempfile.new(['nhcfx', '.c'])
-                            fmakefile = Tempfile.new('nhcfx_makefile')
-                            fbin_path = fsrc.path.sub('.c', '')
-                            fsrc.write(src)
-                            fsrc.close
-                            fmakefile.close
-                            File.open(fmakefile.path, 'w') do |f|
-                                makefile = File.read('/src/Makefile')
-                                makefile.gsub!('nhcfx', File.basename(fsrc.path).sub('.c', ''))
-                                f.write(makefile)
-                            end
-                            system("make -C \"#{File.dirname(fmakefile.path)}\" -f \"#{fmakefile.path}\"")
-    #                         t0 = Time.now.to_f
-                            
-    #                         t1 = Time.now.to_f; puts "Compile: #{t1 - t0}"; t0 = t1
-                            unless File.exists?(fbin_path)
-                                raise "Error compiling C source using function: #{function}"
-                            end
-                            Open3.pipeline([fbin_path, fx_txt_path], 
-                                        ["convert -size #{pixel_width}x#{pixel_height} -depth 8 gray:- \"#{fx_png_path}\""])
-    #                         t1 = Time.now.to_f; puts "Render raw: #{t1 - t0}"; t0 = t1
-                        end
-
-                        stdout, thread = Open3.pipeline_r(
-                            "convert \"#{fx_png_path}\" gray:/dev/stdout",
-                            "/interleave #{function_color[1, 2].to_i(16)} #{function_color[3, 2].to_i(16)} #{function_color[5, 2].to_i(16)} #{(function_opacity * 255).to_i}",
-                            "convert -size #{pixel_width}x#{pixel_height} -depth 8 rgba:- png32:-")
-                        png_base64 = Base64.strict_encode64(stdout.read)
-                        stdout.close
-#                         t1 = Time.now.to_f; puts "Interleave: #{t1 - t0}"; t0 = t1
-                        
-                        xml.image('xlink:href' => 'data:image/png;base64,' + png_base64, 
+                        next unless function_entry['src'] == 'nhcfx_eq.c'
+                        xml.image('xlink:href' => 'data:image/png;base64,' + function_entry[:png], 
                                 :x => padding[3], :y => padding[0],
                                 :width => graph_width, :height => graph_height)
+                    end
+                    
+                    # draw function labels
+                    options[:f].each do |function_entry|
+                        function_name = function_entry['label']
+                        function_color = function_entry['color']
+                        function_color ||= options[:color]
+                        function_opacity = function_entry['opacity']
+                        function_opacity ||= 1.0
+                        fx_txt_path = File.join(dir, function_entry[:src_sha1] + '.fx.txt')
                         label_pos = [-1, -1]
                         begin
                             label_pos = File.read(fx_txt_path).strip.split(' ').map { |x| x.to_i }
