@@ -76,9 +76,9 @@ $(document).ready(function() {
             $('#dl_buttons').append(dl_svg);
         });
     });
-    jQuery.each(['sin x', 'cos x', 'tan x', 'x^2', '1/x', 
-                 'ln x', 'e^x', 'sqrt(x)', 'sin x / x', 
-                 '3*x^2 - 2*x^3', 
+    jQuery.each(['sin(x)', 'cos(x)', 'tan(x)', 'x^2', '1/x', 
+                 'ln(x)', 'e^x', 'sqrt(x)', 'sin(x) / x', 
+                 '3x^2-2x^3', 
                  'r = 3', 
                  'r = 3 + sin(phi*2)^2',
                  'r = 3 + sin(phi * 4) * 0.5',
@@ -86,6 +86,8 @@ $(document).ready(function() {
                  'r = 2 + pow(sin(phi * 16 + r * 4), 8) * 2.5',
                  'r = 3 + sin(atan2(y, abs(x)) * 2) * 0.8',
                  'r = 3 + sin(5* phi)^11',
+                 'r = 2.5 + ((phi+pi+0.2) % (pi/8)) * 2',
+                 'r % 1 = 0.5 + cos(4phi) * 0.05 * r',
                  'phi = cos(r*3)*pi',
                  'phi = tan(3*r)/5',
                  'phi = cos(r*3)',
@@ -95,7 +97,8 @@ $(document).ready(function() {
                  'atan2(y, abs(x)) = cos(r*3)*pi',
                  'atan2(y, abs(x)) = cos(r*30)',
                  'atan2(y, abs(x)) = tan(r*3)',
-                 'atan2(y, abs(x)) = ln(r*3)',
+                 'atan2(y, abs(x)) = log(r*3)',
+                 '(4/pi)*((1 /1)*sin( 2*pi*(pi/10)*x)+(1 /3)*sin( 6*pi*(pi/10)*x)+(1 /5)*sin(10*pi*(pi/10)*x)+(1 /7)*sin(14*pi*(pi/10)*x)+(1 /9)*sin(18*pi*(pi/10)*x)+(1/11)*sin(22*pi*(pi/10)*x)+(1/13)*sin(26*pi*(pi/10)*x)+(1/15)*sin(30*pi*(pi/10)*x)+(1/17)*sin(34*pi*(pi/10)*x)+(1/19)*sin(38*pi*(pi/10)*x)+(1/21)*sin(42*pi*(pi/10)*x)+(1/23)*sin(46*pi*(pi/10)*x)+(1/25)*sin(50*pi*(pi/10)*x)+(1/27)*sin(54*pi*(pi/10)*x))'
                 ], function(_, f) {
         var div = $('<div>').attr('id', 'gal_' + _).addClass('gallery_graph');
         $('.gallery_graphs').append(div);

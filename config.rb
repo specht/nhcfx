@@ -20,7 +20,8 @@ DEV_NEO4J_PORT = 8021
 LOGS_PATH = DEVELOPMENT ? './logs' : "/home/qts/logs/#{PROJECT_NAME}"
 DATA_PATH = DEVELOPMENT ? './data' : "/home/qts/data/#{PROJECT_NAME}"
 NEO4J_DATA_PATH = File::join(DATA_PATH, 'neo4j')
-RAW_FILES_PATH = File::join(DATA_PATH, 'raw')
+CACHE_FILES_PATH = File::join(DATA_PATH, 'cache')
+BIN_FILES_PATH = File::join(DATA_PATH, 'bin')
 
 docker_compose = {
     :version => '3',
@@ -33,7 +34,8 @@ if PROFILE.include?(:static)
         :build => './docker/nginx',
         :volumes => [
             './src/static:/usr/share/nginx/html:ro',
-            "#{RAW_FILES_PATH}:/raw:ro",
+            "#{CACHE_FILES_PATH}:/cache:ro",
+            "#{CACHE_FILES_PATH}:/app_bin:ro",
             "#{LOGS_PATH}:/var/log/nginx",
         ]
     }
@@ -70,8 +72,8 @@ if PROFILE.include?(:static)
 
             charset utf-8;
 
-            location /cache {
-                root /raw;
+            location /cache/* {
+                root /cache;
             }
 
             location /api {
@@ -99,9 +101,10 @@ if PROFILE.include?(:dynamic)
     docker_compose[:services][:ruby] = {
         :build => './docker/ruby',
         :volumes => ['./src/ruby:/app:ro',
-                     './src/c:/src:ro',
+                     './src:/src:ro',
                      './src/static:/static:ro',
-                     "#{RAW_FILES_PATH}:/raw"],
+                     "#{CACHE_FILES_PATH}:/cache",
+                     "#{BIN_FILES_PATH}:/app_bin"],
         :environment => env,
         :working_dir => '/app',
         :entrypoint =>  DEVELOPMENT ?
@@ -148,7 +151,8 @@ end
 FileUtils::mkpath(LOGS_PATH)
 if PROFILE.include?(:dynamic)
     FileUtils::cp('src/ruby/Gemfile', 'docker/ruby/')
-    FileUtils::mkpath(File::join(RAW_FILES_PATH, 'cache'))
+    FileUtils::mkpath(CACHE_FILES_PATH)
+    FileUtils::mkpath(BIN_FILES_PATH)
 end
 if PROFILE.include?(:neo4j)
     FileUtils::mkpath(NEO4J_DATA_PATH)

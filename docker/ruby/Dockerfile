@@ -7,7 +7,4 @@ RUN cp /usr/share/zoneinfo/Europe/Berlin /etc/localtime && echo "Europe/Berlin" 
 RUN gem install bundler
 ADD Gemfile /
 RUN bundle install
-RUN mkdir /.config && chown 1000:1000 /.config
-ADD interleave.c /
-RUN gcc -O3 -o /interleave /interleave.c
 USER 1000:1000

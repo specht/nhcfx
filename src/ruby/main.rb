@@ -1,3 +1,4 @@
+require 'fileutils'
 require 'json'
 require 'open3'
 require 'openssl'
@@ -101,8 +102,19 @@ class Main < Sinatra::Base
                 :grid => Array
             })
         tag = render_function_to_svg(data)
-        respond(:tag => tag, :svg => File.read("/raw/cache/#{tag}.svg"))
+        respond(:tag => tag, :svg => File.read("/cache/#{tag}.svg"))
     end
-    
+
+    # compile programs
+    unless FileUtils.uptodate?('/app_bin/interleave', ['/src/interleave.c'])
+        system("gcc -O1 -o /app_bin/interleave /src/interleave.c")
+        system("strip --strip-all /app_bin/interleave")
+    end
+    unless FileUtils.uptodate?('/app_bin/nhcfx', ['/src/nhcfx.cpp'])
+        STDERR.puts "Compiling nhcfx... (this may take a while)"
+        system("gcc -O1 -o /app_bin/nhcfx -I/src/ext/exprtk/ /src/nhcfx.cpp -lstdc++ -lm")
+        system("strip --strip-all /app_bin/nhcfx")
+    end
+    STDERR.puts "Ready."
     run! if app_file == $0
 end
