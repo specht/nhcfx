@@ -1,6 +1,9 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
+#include <iostream>
+
+using namespace std;
 
 // gcc -O1 -o /app_bin/nhcfx -I/src/ext/exprtk/ /src/nhcfx.cpp -lstdc++ -lm && time /app_bin/nhcfx 0 "sin(x)-y" 236 236 -4 4 0.03389830508474576 -0.03389830508474576 2 2.362204724409449 8 /tmp/coords.txt | convert -size 236x236 -depth 8 gray:- /cache/out.png
 
@@ -10,7 +13,9 @@
 #include "exprtk.hpp"
 #endif
 
-double x, y, r, phi;
+double x, y;
+double* r_ = 0;
+double* phi_ = 0;
 #ifndef DUMMY
 exprtk::symbol_table<double> symbol_table;
 exprtk::expression<double> expression;
@@ -32,7 +37,7 @@ exprtk::parser<double> parser;
 // 12. output text file for label coordinates
 
 int type;
-const char* function;
+const char* fx;
 int width, height, width2, height2;
 double xl, yt, dx, dy;
 int aa_level;
@@ -49,13 +54,15 @@ double f(double _x, double _y)
 {
     x = _x;
     y = _y;
-    // TODO: skip these if we don't need them!
-    r = sqrt(x * x + y * y);
-    phi = atan2(y, x);
+    if (r_)
+        *r_ = sqrt(x * x + y * y);
+    if (phi_)
+        *phi_ = atan2(y, x);
 #ifndef DUMMY
     return expression.value();
 #else
-    return y - (1/(x));
+    return r - (2.5 + (fmod((phi+M_PI+0.2) , (M_PI/8))) * 2);
+//     return r - 3;
 #endif
 }
 
@@ -98,7 +105,7 @@ double subdivide(double sx, double sy, int level, int max_level)
 int main(int argc, char** argv)
 {
     type = atoi(argv[1]);
-    function = argv[2];
+    fx = argv[2];
     width = atoi(argv[3]);
     height = atoi(argv[4]);
     width2 = width / 2;
@@ -114,13 +121,28 @@ int main(int argc, char** argv)
 #ifndef DUMMY
     symbol_table.add_variable("x", x);
     symbol_table.add_variable("y", y);
-    symbol_table.add_variable("r", r);
-    symbol_table.add_variable("phi", phi);
     symbol_table.add_constant("e", 2.718281828459045235360287);
     symbol_table.add_function("ln", ln);
     symbol_table.add_constants();
+    exprtk::symbol_table<double> unknown_symbol_table;
+    expression.register_symbol_table(unknown_symbol_table);
     expression.register_symbol_table(symbol_table);
-    parser.compile(function, expression);
+    parser.enable_unknown_symbol_resolver();
+    parser.compile(fx, expression);
+    std::vector<std::string> variable_list;
+    unknown_symbol_table.get_variable_list(variable_list);
+    for (auto& var_name : variable_list)
+    {
+        if (var_name.compare("r") == 0)
+            r_ = &unknown_symbol_table.variable_ref(var_name);
+        else if (var_name.compare("phi") == 0)
+            phi_ = &unknown_symbol_table.variable_ref(var_name);
+        else
+        {
+            cerr << "unknown variable: " << var_name << "\n";
+            exit(1);
+        }
+    }
 #endif
 
     unsigned char* buffer;
@@ -209,9 +231,9 @@ int main(int argc, char** argv)
         line1 = temp;
     }
 
-    FILE *f = fopen(argv[12], "w");
-    fprintf(f, "%d %d", label_x, label_y);
-    fclose(f);
+    FILE *fl = fopen(argv[12], "w");
+    fprintf(fl, "%d %d", label_x, label_y);
+    fclose(fl);
     
     // dilate pixels and render graph
     int w = ceil(lw / 2);

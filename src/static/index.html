@@ -4,13 +4,15 @@
 <!--     <link href="https://fonts.googleapis.com/css?family=Inconsolata" rel="stylesheet"> -->
     <link href="/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/styles.css" rel="stylesheet">
+    <link href="/dashboard.css" rel="stylesheet">
     <script src="/bower_components/jquery/dist/jquery.min.js"></script>
+    <script src="/bower_components/popper.js/dist/umd/popper.min.js"></script>
     <script src="/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
     <script src="nhcfx.js"></script>
 </head>
 
 <body>
-    <ul class="nav nav-tabs">
+<!--    <ul class="nav nav-tabs">
     <li class="nav-item">
         <a class="nav-link active mi mi_fx" mi='fx' href='#'>Function Renderer</a>
     </li>
@@ -52,22 +54,6 @@
                         </div>
                     </div>
                 </form>
-                <!--
-                options[:range] ||= [-8, -4, 8, 4]
-                options[:padding] ||= [5, 5, 5, 5]
-                options[:scale] ||= 1.0 # 1 unit equals n cm
-                options[:tick_length] ||= 1.0
-                options[:font_size] ||= 3
-                options[:label_padding] ||= 0.1
-                options[:dpi] ||= 150
-                options[:line_width] ||= 0.4
-                options[:aa_level] ||= 2
-                options[:pen_points] ||= 8
-                options[:color] ||= '#000000'
-                options[:f] ||= []
-                options[:grid] ||= [{'space' => 0.5, 'color' => '#aaa', 'width' => 0.05}, 
-                                    {'space' => 1.0, 'color' => '#888', 'width' => 0.05}]
-                -->
                 <button id='render' class='btn btn btn-primary'>Render</button>
                 <hr />
                 <div id='dl_buttons'></div>
@@ -87,26 +73,132 @@
         </div>
     </div>
     <div class='container-wide'>
-        <div class='cn cn_fx'>
-            <div class='row'>
-                <div id='graph'></div>
+    </div>-->
+    <nav class="navbar navbar-dark fixed-top bg-dark flex-md-nowrap p-0 shadow" style='justify-content: unset;'>
+      <a class="navbar-brand mr-0" href="#">nhcfx</a>
+      <ul class="nav nav-pills" style='margin-left: 5px;'>
+        <li class="nav-item text-nowrap">
+            <a class="nav-link active mi mi_fx" mi='fx' href='#'>Function Renderer</a>
+        </li>
+        <li class="nav-item text-nowrap">
+            <a class="nav-link mi mi_gal" mi='gal' href='#'>Gallery</a>
+        </li>
+        <li class="nav-item text-nowrap">
+            <a class="nav-link mi mi_doc" mi='doc' href='#'>Documentation</a>
+        </li>
+      </ul>
+<!--       <input class="form-control form-control-dark w-100" type="text" placeholder="Search" aria-label="Search"> -->
+    </nav>
+
+    <div class="container-fluid">
+      <div class="row">
+        <nav class="d-md-block bg-light sidebar">
+          <div class="sidebar-sticky" style='padding: 15px;'>
+            <div class='sb sb_fx'>
+                <form>
+                    <div class="form-group">
+                        <button class='btn' style='float: right;'>+</button>
+                        <label>Term / Equation</label>
+                        <div class='input-group'>
+                            <input type="text" class="form-control" id="f">
+                            <div class="input-group-append">
+                                <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
+                                <div class="dropdown-menu">
+                                <a class="dropdown-item" href="#">Color</a>
+                                <div role="separator" class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#">Move up</a>
+                                <a class="dropdown-item" href="#">Move down</a>
+                                <div role="separator" class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="#">Remove</a>
+                                </div>
+                            </div>                        
+                            <div class='swatch'></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class='row align-items-center'>
+                            <div class="input-group mb-2 col-md-6 align-items-center">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">X:</div>
+                                </div>
+                                <input type="text" class="form-control" id="xmin" value='-8' style='text-align: center;' />
+                                <input type="text" class="form-control" id="xmax" value='8' style='text-align: center;' />
+                                <div style='display: inline-block; position: absolute; background-color: #fff; left: 95px; padding: 6px; z-index: 200;'>&hellip;</div>
+                            </div>
+                            <div class="input-group mb-2 col-md-6 align-items-center">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">Y:</div>
+                                </div>
+                                <input type="text" class="form-control" id="ymin" value='-4' style='text-align: center;'>
+                                <input type="text" class="form-control" id="ymax" value='4' style='text-align: center;'>
+                                <div style='display: inline-block; position: absolute; background-color: #fff; left: 95px; padding: 6px; z-index: 200;'>&hellip;</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class='row align-items-center'>
+                            <label class='col-md-3'>Scale:</label>
+                            <div class="input-group mb-2 col-md-9">
+                                <input type="text" class="form-control" id="scale" value='1.0'>
+                                <div class="input-group-append">
+                                    <div class="input-group-text">cm</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class='row align-items-center'>
+                            <label class='col-md-3'>Resolution:</label>
+                            <div class="input-group mb-2 col-md-9">
+                                <input type="text" class="form-control" id="dpi" value='150'>
+                                <div class="input-group-append">
+                                    <div class="input-group-text">dpi</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+                <button id='render' class='btn btn btn-primary'>Render</button>
+                <hr />
+                <div id='dl_buttons'></div>
             </div>
-        </div>
-        <div class='cn cn_gal'>
-            <div class='row gallery_graphs'>
-            </div>
-        </div>
-        <div class='cn cn_doc'>
-            <div class='row'>
-                <div class='col-12'>
-<!--                     <h2>Documentation</h2> -->
-<!--                     <h3>Source code</h3> -->
-                    <p>
-                    Find the source code here: <a href='https://github.com/specht/nhcfx/'>https://github.com/specht/nhcfx/</a>
-                    </p>
+            <div class='sb sb_gal'>
+                <div class='row'>
+                    <strong>Gallery</strong>
+                    <hr />
                 </div>
             </div>
-        </div>
+            <div class='sb sb_doc'>
+                <div class='row'>
+                    <strong>Documentation</strong>
+                    <hr />
+                </div>
+            </div>
+          </div>
+        </nav>
+
+        <main role="main" class="ml-sm-auto col-md-12 col-sm-12 px-4">
+          <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3">
+            <div class='cn cn_fx'>
+                <div class='row'>
+                    <div id='graph'></div>
+                </div>
+            </div>
+            <div class='cn cn_gal'>
+                <div class='row gallery_graphs'>
+                </div>
+            </div>
+            <div class='cn cn_doc'>
+                <div class='row'>
+                    <div class='col-12'>
+                        <p>
+                        Find the source code here: <a href='https://github.com/specht/nhcfx/'>https://github.com/specht/nhcfx/</a>
+                        </p>
+                    </div>
+                </div>
+            </div>
+          </div>
+        </main>
+      </div>
     </div>
+
 </body>
 </html>

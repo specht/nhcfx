@@ -161,7 +161,9 @@ def render_function_to_svg(options = {})
             fx_txt_path = File.join(dir, src_sha1 + '.fx.txt')
 #             STDERR.puts fx_png_path
             unless File.exists?(fx_png_path) && File.exists?(fx_txt_path)
-                STDERR.puts args.join(' ')
+                File.open(fx_txt_path + '.arg', 'w') do |f|
+                    f.puts args.map { |x| '"' + x + '"' }.join(' ')
+                end
                 Open3.pipeline(['/app_bin/nhcfx', *args, fx_txt_path], 
                             ["convert -size #{pixel_width}x#{pixel_height} -depth 8 gray:- \"#{fx_png_path}\""])
 #                         t1 = Time.now.to_f; puts "Render raw: #{t1 - t0}"; t0 = t1

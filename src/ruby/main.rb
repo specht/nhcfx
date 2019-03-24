@@ -66,20 +66,6 @@ class Main < Sinatra::Base
     
     post '/api/render' do
         data = parse_request_data(
-#     options[:range] ||= [-8, -4, 8, 4]
-#     options[:padding] ||= [5, 5, 5, 5]
-#     options[:scale] ||= 1.0 # 1 unit equals n cm
-#     options[:tick_length] ||= 1.0
-#     options[:font_size] ||= 3
-#     options[:label_padding] ||= 0.1
-#     options[:dpi] ||= 150
-#     options[:line_width] ||= 0.4
-#     options[:aa_level] ||= 2
-#     options[:pen_points] ||= 8
-#     options[:color] ||= '#000000'
-#     options[:f] ||= []
-#     options[:grid] ||= [{'space' => 0.5, 'color' => '#aaa', 'width' => 0.05}, 
-#                         {'space' => 1.0, 'color' => '#888', 'width' => 0.05}]
             :optional_keys => [
                 :f, :range, :padding, :scale, :tick_length,
                 :font_size, :label_padding, :dpi, :line_width,
@@ -103,6 +89,12 @@ class Main < Sinatra::Base
             })
         tag = render_function_to_svg(data)
         respond(:tag => tag, :svg => File.read("/cache/#{tag}.svg"))
+    end
+
+    post '/api/load' do
+        data = parse_request_data(:required_keys => [:tag])
+        info = JSON.parse(File.read("/cache/#{data[:tag]}.json"))
+        respond(:info => info)
     end
 
     # compile programs
