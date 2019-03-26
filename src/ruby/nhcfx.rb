@@ -81,7 +81,7 @@ def render_function_to_svg(options = {})
     dpi = options[:dpi]
     
     options_json = options.to_json
-    tag = Digest::SHA1.hexdigest(options_json)
+    tag = Digest::SHA1.hexdigest(options_json).to_i(16).to_s(36)[0, 10]
     dir = '/cache'
     FileUtils.mkdir(dir) unless File.directory?(dir)
     svg_path = File.join(dir, tag + '.svg')

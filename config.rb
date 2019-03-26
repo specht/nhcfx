@@ -35,7 +35,7 @@ if PROFILE.include?(:static)
         :volumes => [
             './src/static:/usr/share/nginx/html:ro',
             "#{CACHE_FILES_PATH}:/cache:ro",
-            "#{CACHE_FILES_PATH}:/app_bin:ro",
+            "#{BIN_FILES_PATH}:/app_bin:ro",
             "#{LOGS_PATH}:/var/log/nginx",
         ]
     }
@@ -83,6 +83,9 @@ if PROFILE.include?(:static)
             location / {
                 root /usr/share/nginx/html;
             }
+                              
+            auth_basic "HERE BE DRAGONS";
+            auth_basic_user_file /app_bin/htpasswd_nhcfx;
         }
 
     eos

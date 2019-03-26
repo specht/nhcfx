@@ -72,12 +72,24 @@ $(document).ready(function() {
         options.range.push(parseFloat($('#ymin').val()));
         options.range.push(parseFloat($('#xmax').val()));
         options.range.push(parseFloat($('#ymax').val()));
+        options.pen_points = parseInt($('#pen_points').val());
+        options.line_width = parseFloat($('#line_width').val());
+        options.dpi = parseFloat($('#dpi').val());
+        options.aa_level = parseInt($('#aa_level').val());
         api_call('/api/render', options, function(data) {
             $('#graph').empty();
             $('#graph').html(data.svg);
             $('#dl_buttons').empty();
             var dl_svg = $('<a>').addClass('btn btn btn-secondary').attr('href', '/cache/' + data.tag + '.svg').html('Download SVG');
             $('#dl_buttons').append(dl_svg);
+            window.location.hash = data.tag;
+            window.current_tag = data.tag;
+//             var searchParams = new URLSearchParams(window.location.search);
+//             if (data.tag !== window.tag)
+//             {
+//                 searchParams.set("tag", data.tag);
+//                 window.location.search = searchParams.toString();
+//             }
         });
     });
     jQuery.each(['sin(x)', 'cos(x)', 'tan(x)', 'x^2', '1/x', 
@@ -87,6 +99,7 @@ $(document).ready(function() {
                  'r = 3 + sin(phi*2)^2',
                  'r = 3 + sin(phi * 4) * 0.5',
                  'r = 3 - pow(pow(sin(phi * 2), 2), 16)/2',
+                 'r = 3 - sin(phi*3)^64',
                  'r = 2 + pow(sin(phi * 16 + r * 4), 8) * 2.5',
                  'r = 3 + sin(atan2(y, abs(x)) * 2) * 0.8',
                  'r = 3 + sin(5* phi)^11',
@@ -102,7 +115,7 @@ $(document).ready(function() {
                  'atan2(y, abs(x)) = cos(r*30)',
                  'atan2(y, abs(x)) = tan(r*3)',
                  'atan2(y, abs(x)) = log(r*3)',
-                 '(4/pi)*((1 /1)*sin( 2*pi*(pi/10)*x)+(1 /3)*sin( 6*pi*(pi/10)*x)+(1 /5)*sin(10*pi*(pi/10)*x)+(1 /7)*sin(14*pi*(pi/10)*x)+(1 /9)*sin(18*pi*(pi/10)*x)+(1/11)*sin(22*pi*(pi/10)*x)+(1/13)*sin(26*pi*(pi/10)*x)+(1/15)*sin(30*pi*(pi/10)*x)+(1/17)*sin(34*pi*(pi/10)*x)+(1/19)*sin(38*pi*(pi/10)*x)+(1/21)*sin(42*pi*(pi/10)*x)+(1/23)*sin(46*pi*(pi/10)*x)+(1/25)*sin(50*pi*(pi/10)*x)+(1/27)*sin(54*pi*(pi/10)*x))'
+                 '(4/pi)*((1/1)*sin(2*pi*(pi/10)*x)+(1/3)*sin(6*pi*(pi/10)*x)+(1/5)*sin(10*pi*(pi/10)*x)+(1/7)*sin(14*pi*(pi/10)*x)+(1/9)*sin(18*pi*(pi/10)*x)+(1/11)*sin(22*pi*(pi/10)*x)+(1/13)*sin(26*pi*(pi/10)*x)+(1/15)*sin(30*pi*(pi/10)*x)+(1/17)*sin(34*pi*(pi/10)*x)+(1/19)*sin(38*pi*(pi/10)*x)+(1/21)*sin(42*pi*(pi/10)*x)+(1/23)*sin(46*pi*(pi/10)*x)+(1/25)*sin(50*pi*(pi/10)*x)+(1/27)*sin(54*pi*(pi/10)*x))'
                 ], function(_, f) {
         var div = $('<a>').attr('id', 'gal_' + _).addClass('gallery_graph');
         $('.gallery_graphs').append(div);
@@ -119,22 +132,80 @@ $(document).ready(function() {
         options.tick_length = 0.7;
         api_call('/api/render', options, function(data) {
             $('#gal_' + _).html(data.svg);
-            $('#gal_' + _).attr('href', '/?tag=' + data.tag);
+            $('#gal_' + _).attr('href', '/#' + data.tag);
         });
     });
-    var params = new URLSearchParams(window.location.search);
-    if (params.has('tag'))
+    $('.drawer-header').click(function(e) {
+        var header = $(e.target);
+        var drawer = header.next('.drawer');
+        if (drawer.is(':visible'))
+        {
+            drawer.slideUp();
+            header.addClass('closed');
+        }
+        else
+        {
+            drawer.slideDown();
+            header.removeClass('closed');
+        }
+    });
+    var tag = window.location.hash.substr(1);
+    if (tag.length > 0)
     {
-        api_call('/api/load', {tag: params.get('tag')}, function(data) {
-            console.log(data);
+        api_call('/api/load', {tag: tag}, function(data) {
             $('#f').val(data.info.f[0].f);
             $('#render').click();
         });
     }
     else
     {
-        $('#f').val('atan2(y, abs(x)) = cos(r*3)');
+        $('#f').val('sin(x)');
         $('#render').click();
     }
+    window.onhashchange = function() {
+        var tag = window.location.hash.substr(1);
+        if (tag.length > 0 && window.current_tag != tag)
+        {
+            api_call('/api/load', {tag: tag}, function(data) {
+                $('#f').val(data.info.f[0].f);
+                $('#render').click();
+                $('.mi_fx').click();
+            });
+        }
+        else
+        {
+            window.location.hash = window.current_tag;
+        }
+    };
+//     var params = new URLSearchParams(window.location.search);
+//     if (params.has('tag'))
+//     {
+//         api_call('/api/load', {tag: params.get('tag')}, function(data) {
+//             console.log(data);
+//             $('#f').val(data.info.f[0].f);
+//             $('#render').click();
+//         });
+//     }
+//     else
+//     {
+//         $('#f').val('atan2(y, abs(x)) = cos(r*3)');
+//         $('#render').click();
+//     }
+    jQuery.each(cling_colors, function(_, color) {
+        var div = $('<div>').addClass('color');
+        div.append($('<div>').css('background-color', color[0])).append($('<span>').text(color[1]));
+        $('.swatches').append(div);
+        div.click(function(e) {
+            var rgb = $(e.currentTarget).find('div').css('background-color');
+            $('.color-input-sample').css('background-color', rgb);
+            $('#color_input').val('#' + rgb.substr(4, rgb.indexOf(')') - 4).split(',').map((color) => String("0" + parseInt(color).toString(16)).slice(-2)).join(''));
+        });
+    });
+    
+    $('.mi-color-chooser').click(function(e) {
+        $('#color_input').val('#204a87');
+        $('.color-input-sample').css('background-color', '#204a87');
+        $('#color_modal').modal();
+    });
 });
 

@@ -1,6 +1,20 @@
+/* @import url('https://fonts.googleapis.com/css?family=Muli'); */
+/* @import url('https://fonts.googleapis.com/css?family=Catamaran'); */
+/* @import url('https://fonts.googleapis.com/css?family=Actor'); */
+@import url('https://fonts.googleapis.com/css?family=Alef');
+/* @import url('https://fonts.googleapis.com/css?family=Magra'); */
+/* @import url('https://fonts.googleapis.com/css?family=Rosario'); */
+/* @import url('https://fonts.googleapis.com/css?family=Rosario'); */
+
 body {
     background-color: #f8f8f8;
     overflow-y: scroll;
+/*     font-family: Muli, sans-serif; */
+    font-family: 'Alef', sans-serif;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 
 .main {
@@ -9,9 +23,9 @@ body {
 
 #graph {
     box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.3);
-    margin-left: auto;
-    margin-right: auto;
-    margin-top: 30px;
+/*     margin-left: auto; */
+/*     margin-right: auto; */
+/*     margin-top: 30px; */
 }
 
 hr {
@@ -40,10 +54,176 @@ hr {
     position: absolute;
     width: 12px;
     height: 12px;
-    right: 42px;
+    right: 60px;
     top: 12px;
     border-radius: 6px;
 /*     border: 1px solid #000; */
     background-color: #204a87;
     z-index: 1200px;
+}
+
+.sidebar .drawer-fixed {
+    font-size: 90%; 
+    background-color: rgba(255,255,255,0.5); 
+    margin: 0px -20px 0px -20px;
+    padding: 10px 20px;
+    border-bottom: 1px solid #ddd;
+/*     border-top: 1px solid #ddd; */
+/*     border-bottom: 1px solid #ddd; */
+/*     box-shadow: inset 0 14px 10px -14px rgba(0,0,0,0.2), inset 0 -14px 10px -14px rgba(0,0,0,0.2); */
+}
+
+.sidebar .drawer {
+    font-size: 90%; 
+    background-color: rgba(255,255,255,0.5); 
+    margin: 0px -20px 0px -20px;
+    padding: 10px 20px;
+/*     border-top: 1px solid #ddd; */
+    border-bottom: 1px solid #ddd;
+    box-shadow: inset 0 14px 10px -14px rgba(0,0,0,0.2), inset 0 -14px 10px -14px rgba(0,0,0,0.2);
+}
+
+.drawer-header {
+    position: relative;
+    cursor: pointer;
+}
+
+.drawer-header:hover {
+    background-color: rgba(0,0,0,0.04);
+}
+
+.drawer-header i
+{
+    position: absolute;
+    right: 20px;
+    top: 17px;
+    transition: transform 0.4s;
+    transition-timing-function: ease;
+}
+
+.drawer-header.closed i {
+    transform: rotate(-90deg);
+    transition: transform 0.4s;
+    transition-timing-function: ease;
+}
+
+.sidebar h1 {
+    font-size: 100%;
+    margin: 0px -20px 0px -20px;
+    padding: 15px 20px;
+/*     font-weight: bold; */
+}
+.sidebar h1 {
+    border-bottom: 1px solid #ddd;
+    font-weight: normal;
+}
+
+.sidebar>div {
+/*     border-bottom: 1px solid #ddd; */
+    margin: 0 -15px;
+    padding: 0 15px;
+}
+
+.sidebar h1:first-child {
+    margin-top: 0;
+}
+
+.sidebar h1 .caret {
+    position: absolute;
+    top: 19px;
+    font-size: 85%;
+}
+
+.navbar {
+    height: 50px;
+}
+
+.bg-dark {
+    background-color: #2a2a2a!important;
+}
+
+.dropdown-item {
+    padding-left: 40px;
+    position: relative;
+}
+
+.dropdown-item i {
+    float: left;
+    position: absolute;
+    top: 8px;
+    left: 15px;
+}
+
+.smaller-font .form-group * {
+    font-size: 0.75rem!important;
+}
+
+.addon-inline {
+    background-color: #fff;
+    border-left: 0;
+    color: #888;
+    padding-left: 0;
+}
+
+.addon-pre-inline {
+    border-right: 0;
+    padding-right: 5px;
+    text-align: right;
+}
+
+.modal-dialog {
+    max-width: 600px;
+}
+
+.swatches div.color {
+    display: inline-block;
+    cursor: pointer;
+    padding: 8px 5px 3px 5px;
+    width: 130px;
+    margin-right: 0px;
+    margin-bottom: 0px;
+    border-radius: 4px;
+    border: 1px solid #fff;
+    text-align: left;
+}
+ 
+.swatches div.color.active {
+    border: 1px solid rgba(0, 0, 0, 0.25);
+}
+
+.swatches div.color:hover {
+    background-color: #f0f0f0;
+}
+
+
+.swatches div.color div {
+    display: inline-block;
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    text-align: center;
+    border: 1px solid rgba(0,0,0,0.25);
+}
+
+.swatches span {
+    display: inline-block;
+    position: relative;
+    top: -8px;
+    left: 8px;
+}
+
+.input-group-text {
+    font-size: .875rem!important;
+}
+
+.color-input-sample {
+    display: inline-block;
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    text-align: center;
+    border: 1px solid rgba(0,0,0,0.25);
+    position: relative;
+    left: 18px;
+    top: 3px;
 }
