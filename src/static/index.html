@@ -63,7 +63,7 @@
                         </div>
                     </div>
                 </div>
-                <h1 class='drawer-header'>Range<i class="fa caret fa-caret-down"></i></h1>
+                <h1 class='drawer-header'>Canvas<i class="fa caret fa-caret-down"></i></h1>
                 <div class='drawer'>
                     <div class="form-group">
                         <div class='row align-items-center'>
@@ -95,8 +95,8 @@
                         </div>
                     </div>
                 </div>
-                <h1 class='drawer-header'>Grid<i class="fa caret fa-caret-down"></i></h1>
-                <div class='drawer'>
+                <h1 class='drawer-header closed'>Grid<i class="fa caret fa-caret-down"></i></h1>
+                <div class='drawer' style='display: none;'>
                     <div class="form-group">
                         <div class='row' style='margin: 5px -15px;'>
                             <div class='input-group col-md-12'>
@@ -158,8 +158,53 @@
                         </div>
                     </div>
                 </div>
-                <h1 class='drawer-header'>Rendering options<i class="fa caret fa-caret-down"></i></h1>
-                <div class='drawer'>
+                <h1 class='drawer-header closed'>Padding<i class="fa caret fa-caret-down"></i></h1>
+                <div class='drawer' style='display: none''>
+                    <div class="form-group">
+                        <div class='row align-items-center'>
+                            <div class="input-group mb-2 col-md-6 pr-1 align-items-center">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text" style='width: 75px;'>Left:</div>
+                                </div>
+                                <input type="text" class="form-control addon-pre-inline" id="padding_left" value='5' style='text-align: center;' />
+                                <div class="input-group-append">
+                                    <div class="input-group-text addon-inline"><span>mm</span></div>
+                                </div>
+                            </div>
+                            <div class="input-group mb-2 col-md-6 pl-1 align-items-center">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text" style='width: 75px;'>Right:</div>
+                                </div>
+                                <input type="text" class="form-control addon-pre-inline" id="padding_right" value='5' style='text-align: center;' />
+                                <div class="input-group-append">
+                                    <div class="input-group-text addon-inline"><span>mm</span></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class='row align-items-center'>
+                            <div class="input-group mb-2 col-md-6 pr-1 align-items-center">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text" style='width: 75px;'>Top:</div>
+                                </div>
+                                <input type="text" class="form-control addon-pre-inline" id="padding_top" value='5' style='text-align: center;' />
+                                <div class="input-group-append">
+                                    <div class="input-group-text addon-inline"><span>mm</span></div>
+                                </div>
+                            </div>
+                            <div class="input-group mb-2 col-md-6 pl-1 align-items-center">
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text" style='width: 75px;'>Bottom:</div>
+                                </div>
+                                <input type="text" class="form-control addon-pre-inline" id="padding_bottom" value='5' style='text-align: center;' />
+                                <div class="input-group-append">
+                                    <div class="input-group-text addon-inline"><span>mm</span></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <h1 class='drawer-header closed'>Rendering options<i class="fa caret fa-caret-down"></i></h1>
+                <div class='drawer' style='display: none;'>
                     <div class="form-group">
                         <div class='row align-items-center'>
                             <label class='col-md-7'>Pen points:</label>

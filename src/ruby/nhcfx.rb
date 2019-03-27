@@ -224,20 +224,20 @@ def render_function_to_svg(options = {})
                     end
                     
                     # draw X axis
-                    grid_lines(xml, t, 1, 0, 0, xmin, xmax, 1.0, '#000', 0.05)
+                    grid_lines(xml, t, 1, 0, 0, xmin, xmax + 0.1 / scale, 1.0, '#000', 0.05)
 
                     # draw X arrow
                     x, y = t.t(xmax, 0)
-                    xml.g(:transform => "translate(#{x + 3.0}, #{y})") do
+                    xml.g(:transform => "translate(#{x + 4}, #{y})") do
                         xml.path(:d => "M 0,0 -3,-0.75 -3,0.75 z", :style => 'fill:#000; stroke: none;')
                     end
                     
                     # draw Y axis
-                    grid_lines(xml, t, 0, 0, 0, ymin, ymax, 1.0, '#000', 0.05)
+                    grid_lines(xml, t, 0, 0, 0, ymin, ymax + 0.1 / scale, 1.0, '#000', 0.05)
                     
                     # draw Y arrow
                     x, y = t.t(0, ymax)
-                    xml.g(:transform => "translate(#{x}, #{y - 3.0})") do
+                    xml.g(:transform => "translate(#{x}, #{y - 4})") do
                         xml.path(:d => "M 0,0 0.75,3 -0.75,3 z", :style => 'fill:#000; stroke: none;')
                     end
                     

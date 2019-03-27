@@ -54,6 +54,44 @@ function api_call(url, data, callback, options)
     });
 }
 
+function render()
+{
+    var f = $('#f0').val();
+    var options = {};
+    options.f = [{f: f, color: rgb_to_hex($('#f0').next('.swatch').css('background-color'))}];
+    options.dpi = parseInt($('#dpi').val());
+    options.scale = parseFloat($('#scale').val());
+    options.range = [];
+    options.range.push(parseFloat($('#xmin').val()));
+    options.range.push(parseFloat($('#ymin').val()));
+    options.range.push(parseFloat($('#xmax').val()));
+    options.range.push(parseFloat($('#ymax').val()));
+    options.pen_points = parseInt($('#pen_points').val());
+    options.line_width = parseFloat($('#line_width').val());
+    options.dpi = parseFloat($('#dpi').val());
+    options.aa_level = parseInt($('#aa_level').val());
+    options.padding = [
+        parseFloat($('#padding_top').val()),
+        parseFloat($('#padding_right').val()),
+        parseFloat($('#padding_bottom').val()),
+        parseFloat($('#padding_left').val())];
+    api_call('/api/render', options, function(data) {
+        $('#graph').empty();
+        $('#graph').html(data.svg);
+        $('#dl_buttons').empty();
+        var dl_svg = $('<a>').addClass('btn btn btn-secondary').attr('href', '/cache/' + data.tag + '.svg').html('Download SVG');
+        $('#dl_buttons').append(dl_svg);
+        window.location.hash = data.tag;
+        window.current_tag = data.tag;
+//             var searchParams = new URLSearchParams(window.location.search);
+//             if (data.tag !== window.tag)
+//             {
+//                 searchParams.set("tag", data.tag);
+//                 window.location.search = searchParams.toString();
+//             }
+    });
+}
+
 $(document).ready(function() {
     $('.sb_fx').show();
     $('.cn_fx').show();
@@ -67,35 +105,11 @@ $(document).ready(function() {
         $('.mi_' + which).addClass('active');
     });
     $('#render').click(function() {
-        var f = $('#f0').val();
-        var options = {};
-        options.f = [{f: f, color: rgb_to_hex($('#f0').next('.swatch').css('background-color'))}];
-        options.dpi = parseInt($('#dpi').val());
-        options.scale = parseFloat($('#scale').val());
-        options.range = [];
-        options.range.push(parseFloat($('#xmin').val()));
-        options.range.push(parseFloat($('#ymin').val()));
-        options.range.push(parseFloat($('#xmax').val()));
-        options.range.push(parseFloat($('#ymax').val()));
-        options.pen_points = parseInt($('#pen_points').val());
-        options.line_width = parseFloat($('#line_width').val());
-        options.dpi = parseFloat($('#dpi').val());
-        options.aa_level = parseInt($('#aa_level').val());
-        api_call('/api/render', options, function(data) {
-            $('#graph').empty();
-            $('#graph').html(data.svg);
-            $('#dl_buttons').empty();
-            var dl_svg = $('<a>').addClass('btn btn btn-secondary').attr('href', '/cache/' + data.tag + '.svg').html('Download SVG');
-            $('#dl_buttons').append(dl_svg);
-            window.location.hash = data.tag;
-            window.current_tag = data.tag;
-//             var searchParams = new URLSearchParams(window.location.search);
-//             if (data.tag !== window.tag)
-//             {
-//                 searchParams.set("tag", data.tag);
-//                 window.location.search = searchParams.toString();
-//             }
-        });
+        render();
+    });
+    $('#f0').keydown(function(e) {
+        if (e.keyCode === 13)
+            render();
     });
     jQuery.each(['sin(x)', 'cos(x)', 'tan(x)', 'x^2', '1/x', 
                  'ln(x)', 'e^x', 'sqrt(x)', 'sin(x) / x', 
