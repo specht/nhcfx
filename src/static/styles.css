@@ -188,6 +188,7 @@ hr {
  
 .swatches div.color.active {
     border: 1px solid rgba(0, 0, 0, 0.25);
+    background-color: #f0f0f0;
 }
 
 .swatches div.color:hover {

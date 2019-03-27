@@ -1,3 +1,8 @@
+function rgb_to_hex(rgb)
+{
+    return '#' + rgb.substr(4, rgb.indexOf(')') - 4).split(',').map((color) => String("0" + parseInt(color).toString(16)).slice(-2)).join('');
+}
+
 function api_call(url, data, callback, options)
 {
     if (typeof(options) === 'undefined')
@@ -62,9 +67,9 @@ $(document).ready(function() {
         $('.mi_' + which).addClass('active');
     });
     $('#render').click(function() {
-        var f = $('#f').val();
+        var f = $('#f0').val();
         var options = {};
-        options.f = [{f: f, color: '#204a87'}];
+        options.f = [{f: f, color: rgb_to_hex($('#f0').next('.swatch').css('background-color'))}];
         options.dpi = parseInt($('#dpi').val());
         options.scale = parseFloat($('#scale').val());
         options.range = [];
@@ -95,6 +100,7 @@ $(document).ready(function() {
     jQuery.each(['sin(x)', 'cos(x)', 'tan(x)', 'x^2', '1/x', 
                  'ln(x)', 'e^x', 'sqrt(x)', 'sin(x) / x', 
                  '3x^2-2x^3', 
+                 'x-y = sin(x+y)',
                  'r = 3', 
                  'r = 3 + sin(phi*2)^2',
                  'r = 3 + sin(phi * 4) * 0.5',
@@ -125,8 +131,8 @@ $(document).ready(function() {
         options.scale = 0.5;
         if (f.indexOf('=') === -1)
             f = 'y = ' + f;
-//         options.f = [{f: f.replace('=', '<'), color: '#729fcf', opacity: 0.3}, {f: f, color: '#204a87'}];
-        options.f = [{f: f, color: '#204a87'}];
+//         options.f = [{f: f.replace('=', '<'), color: '#729fcf', opacity: 0.3}, {f: f, color: '#143b86'}];
+        options.f = [{f: f, color: '#143b86'}];
         options.grid = [{space: 1.0, color: '#888', width: 0.05}];
         options.font_size = 2.5;
         options.tick_length = 0.7;
@@ -153,13 +159,15 @@ $(document).ready(function() {
     if (tag.length > 0)
     {
         api_call('/api/load', {tag: tag}, function(data) {
-            $('#f').val(data.info.f[0].f);
+            console.log(data);
+            $('#f0').val(data.info.f[0].f);
+            $('#f0').next('.swatch').css('background-color', data.info.f[0].color);
             $('#render').click();
         });
     }
     else
     {
-        $('#f').val('sin(x)');
+        $('#f0').val('sin(x)');
         $('#render').click();
     }
     window.onhashchange = function() {
@@ -167,7 +175,7 @@ $(document).ready(function() {
         if (tag.length > 0 && window.current_tag != tag)
         {
             api_call('/api/load', {tag: tag}, function(data) {
-                $('#f').val(data.info.f[0].f);
+                $('#f0').val(data.info.f[0].f);
                 $('#render').click();
                 $('.mi_fx').click();
             });
@@ -182,13 +190,13 @@ $(document).ready(function() {
 //     {
 //         api_call('/api/load', {tag: params.get('tag')}, function(data) {
 //             console.log(data);
-//             $('#f').val(data.info.f[0].f);
+//             $('#f0').val(data.info.f[0].f);
 //             $('#render').click();
 //         });
 //     }
 //     else
 //     {
-//         $('#f').val('atan2(y, abs(x)) = cos(r*3)');
+//         $('#f0').val('atan2(y, abs(x)) = cos(r*3)');
 //         $('#render').click();
 //     }
     jQuery.each(cling_colors, function(_, color) {
@@ -198,14 +206,24 @@ $(document).ready(function() {
         div.click(function(e) {
             var rgb = $(e.currentTarget).find('div').css('background-color');
             $('.color-input-sample').css('background-color', rgb);
-            $('#color_input').val('#' + rgb.substr(4, rgb.indexOf(')') - 4).split(',').map((color) => String("0" + parseInt(color).toString(16)).slice(-2)).join(''));
+            $('#color_input').val(rgb_to_hex(rgb));
+            $('.color').removeClass('active');
+            $(e.currentTarget).addClass('active');
         });
     });
     
     $('.mi-color-chooser').click(function(e) {
-        $('#color_input').val('#204a87');
-        $('.color-input-sample').css('background-color', '#204a87');
+        $('#color_input').val('#143b86');
+        $('#color_input').data('color_target', $(e.target).attr('color_target'));
+        $('.color-input-sample').css('background-color', '#143b86');
         $('#color_modal').modal();
+    });
+    
+    $('.btn-apply-color').click(function(e) {
+        var target = $('#color_input').data('color_target');
+        if (target.substr(0, 1) === 'f')
+            $('#' + target).next('.swatch').css('background-color', $('#color_input').val());
+        $('#color_modal').modal('hide');
     });
 });
 
