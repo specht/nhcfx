@@ -61,7 +61,7 @@ double f(double _x, double _y)
 #ifndef DUMMY
     return expression.value();
 #else
-    return r - (2.5 + (fmod((phi+M_PI+0.2) , (M_PI/8))) * 2);
+    return y - sin(x);
 //     return r - 3;
 #endif
 }
@@ -100,6 +100,33 @@ double subdivide(double sx, double sy, int level, int max_level)
     }
     else
         return count ? 1.0 : 0.0;
+}
+
+double subdivide_lt(double sx, double sy, int level, int max_level)
+{
+    double step = 1.0 / (1 << level);
+    double step2 = step * 0.5;
+    int count = 0;
+    for (int tx = 0; tx < 2; tx++)
+    {
+        for (int ty = 0; ty < 2; ty++)
+        {
+            double x = xl + (sx + tx * step) * dx;
+            double y = yt + (sy + ty * step) * dy;
+            if (f(x, y) < 0)
+                count++;
+        }
+    }
+    // adaptive super sampling
+    if (count != 0 && count != 4 && level < max_level)
+    {
+        return (subdivide_lt(sx, sy, level + 1, max_level) +
+                subdivide_lt(sx + step2, sy, level + 1, max_level) +
+                subdivide_lt(sx, sy + step2, level + 1, max_level) + 
+                subdivide_lt(sx + step2, sy + step2, level + 1, max_level)) * 0.25;
+    }
+    else
+        return (double)count/4.0;
 }
 
 int main(int argc, char** argv)
@@ -157,120 +184,145 @@ int main(int argc, char** argv)
     buffer = (unsigned char*)malloc(width * height);
     unsigned int offset = 0;
     
-    for (int i = 0; i < np; i++)
+    if (type == 0)
     {
-        pd[i * 2 + 0] = cos((double)i * 2 * M_PI / np) * lw * 0.5 * dx;
-        pd[i * 2 + 1] = sin((double)i * 2 * M_PI / np) * lw * 0.5 * dy;
-    }
-    
-    // find seed pixels
-    double y = yt;
-    int label_x = -1;
-    int label_y = -1;
-    long label_dist = 0;
-    for (int sy = 0; sy < height + 1; sy++)
-    {
-        double* slp = line0;
-        double x = xl;
-        for (int sx = 0; sx < width + 1; sx++)
+        // EQ
+        for (int i = 0; i < np; i++)
         {
-            double d = f(x, y);
-            *(slp++) = d;
-            if (sx > 0 && sy > 0)
+            pd[i * 2 + 0] = cos((double)i * 2 * M_PI / np) * lw * 0.5 * dx;
+            pd[i * 2 + 1] = sin((double)i * 2 * M_PI / np) * lw * 0.5 * dy;
+        }
+        
+        // find seed pixels
+        double y = yt;
+        int label_x = -1;
+        int label_y = -1;
+        long label_dist = 0;
+        for (int sy = 0; sy < height + 1; sy++)
+        {
+            double* slp = line0;
+            double x = xl;
+            for (int sx = 0; sx < width + 1; sx++)
             {
-                unsigned char hit = 0;
-                double p0, p1, p2;
-                p0 = line1[sx - 1];
-                p2 = line0[sx];
-                if (p0 * p2 < 0)
+                double d = f(x, y);
+                *(slp++) = d;
+                if (sx > 0 && sy > 0)
                 {
-                    p1 = f(x - ssx, y - ssy);
-                    if (p0 * p1 < 0 && fabs(p0 - p1) < fabs(p0 - p2))
-                        hit = 1;
-                    if (!hit)
+                    unsigned char hit = 0;
+                    double p0, p1, p2;
+                    p0 = line1[sx - 1];
+                    p2 = line0[sx];
+                    if (p0 * p2 < 0)
                     {
-                        p1 = f(x - dx + ssx, y - dy + ssy);
-                        if (p1 * p2 < 0 && fabs(p1 - p2) < fabs(p0 - p2))
+                        p1 = f(x - ssx, y - ssy);
+                        if (p0 * p1 < 0 && fabs(p0 - p1) < fabs(p0 - p2))
                             hit = 1;
-                    }
-                }
-                p0 = line1[sx];
-                p2 = line0[sx - 1];
-                if (!hit && p0 * p2 < 0)
-                {
-                    p1 = f(x - dx + ssx, y - ssy);
-                    if (p0 * p1 < 0 && fabs(p0 - p1) < fabs(p0 - p2))
-                        hit = 1;
-                    if (!hit)
-                    {
-                        p1 = f(x - ssx, y - dy + ssy);
-                        if (p1 * p2 < 0 && fabs(p1 - p2) < fabs(p0 - p2))
-                            hit = 1;
-                    }
-                }
-                buffer[offset++] = hit;
-                if (hit) 
-                {
-                    if (sx == 1 || sy == 1 || sx == width || sy == height)
-                    {
-                        long dist = abs((sy - sy0) * (sx - sx0));
-                        if (dist > label_dist)
+                        if (!hit)
                         {
-                            label_x = sx - 1;
-                            label_y = sy - 1;
-                            label_dist = dist;
+                            p1 = f(x - dx + ssx, y - dy + ssy);
+                            if (p1 * p2 < 0 && fabs(p1 - p2) < fabs(p0 - p2))
+                                hit = 1;
+                        }
+                    }
+                    p0 = line1[sx];
+                    p2 = line0[sx - 1];
+                    if (!hit && p0 * p2 < 0)
+                    {
+                        p1 = f(x - dx + ssx, y - ssy);
+                        if (p0 * p1 < 0 && fabs(p0 - p1) < fabs(p0 - p2))
+                            hit = 1;
+                        if (!hit)
+                        {
+                            p1 = f(x - ssx, y - dy + ssy);
+                            if (p1 * p2 < 0 && fabs(p1 - p2) < fabs(p0 - p2))
+                                hit = 1;
+                        }
+                    }
+                    buffer[offset++] = hit;
+                    if (hit) 
+                    {
+                        if (sx == 1 || sy == 1 || sx == width || sy == height)
+                        {
+                            long dist = abs((sy - sy0) * (sx - sx0));
+                            if (dist > label_dist)
+                            {
+                                label_x = sx - 1;
+                                label_y = sy - 1;
+                                label_dist = dist;
+                            }
                         }
                     }
                 }
+                x += dx;
             }
-            x += dx;
+            y += dy;
+            double* temp = line0;
+            line0 = line1;
+            line1 = temp;
         }
-        y += dy;
-        double* temp = line0;
-        line0 = line1;
-        line1 = temp;
-    }
 
-    FILE *fl = fopen(argv[12], "w");
-    fprintf(fl, "%d %d", label_x, label_y);
-    fclose(fl);
-    
-    // dilate pixels and render graph
-    int w = ceil(lw / 2);
-    int old_percent = -1;
-    for (int y = 0; y < height; y++)
-    {
-        int percent = y * 100 / height;
-        if (percent != old_percent)
+        FILE *fl = fopen(argv[12], "w");
+        fprintf(fl, "%d %d", label_x, label_y);
+        fclose(fl);
+        
+        // dilate pixels and render graph
+        int w = ceil(lw / 2);
+        int old_percent = -1;
+        for (int y = 0; y < height; y++)
         {
-            old_percent = percent;
-            fprintf(stderr, "\r%d", percent);
-        }
-        for (int x = 0; x < width; x++)
-        {
-            unsigned char found_pixel = 0;
-            for (int dy = -w; !found_pixel && dy <= w; dy++)
+            int percent = y * 100 / height;
+            if (percent != old_percent)
             {
-                for (int dx = -w; !found_pixel && dx <= w; dx++)
+                old_percent = percent;
+                fprintf(stderr, "\r%d", percent);
+            }
+            for (int x = 0; x < width; x++)
+            {
+                unsigned char found_pixel = 0;
+                for (int dy = -w; !found_pixel && dy <= w; dy++)
                 {
-                    int tx = x + dx;
-                    int ty = y + dy;
-                    if (tx >= 0 && tx < width && ty >= 0 && ty < height)
+                    for (int dx = -w; !found_pixel && dx <= w; dx++)
                     {
-                        if (buffer[ty * width + tx])
-                            found_pixel = 1;
+                        int tx = x + dx;
+                        int ty = y + dy;
+                        if (tx >= 0 && tx < width && ty >= 0 && ty < height)
+                        {
+                            if (buffer[ty * width + tx])
+                                found_pixel = 1;
+                        }
                     }
                 }
+                // we have found a dilated pixel near the graph, 
+                // now render the graph at this pixel
+                unsigned char color = 0;
+                if (found_pixel)
+                    color = round(subdivide(x, y, 0, aa_level) * 255.0);
+                fwrite(&color, 1, 1, stdout);
             }
-            // we have found a dilated pixel near the graph, 
-            // now render the graph at this pixel
-            unsigned char color = 0;
-            if (found_pixel)
-                color = round(subdivide(x, y, 0, aa_level) * 255.0);
-            fwrite(&color, 1, 1, stdout);
         }
+        fprintf(stderr, "\r%d\n", 100);
     }
-    fprintf(stderr, "\r%d\n", 100);
+    else
+    {
+        // LT
+        // dilate pixels and render graph
+        int old_percent = -1;
+        for (int y = 0; y < height; y++)
+        {
+            int percent = y * 100 / height;
+            if (percent != old_percent)
+            {
+                old_percent = percent;
+                fprintf(stderr, "\r%d", percent);
+            }
+            for (int x = 0; x < width; x++)
+            {
+                unsigned char color = subdivide_lt(x, y, 0, aa_level) * 255;
+                fwrite(&color, 1, 1, stdout);
+            }
+        }
+        fprintf(stderr, "\r%d\n", 100);
+    }
     
     free(buffer);
     free(scanlines);

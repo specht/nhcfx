@@ -117,12 +117,6 @@ hr {
     font-weight: normal;
 }
 
-.sidebar>div {
-/*     border-bottom: 1px solid #ddd; */
-    margin: 0 -15px;
-    padding: 0 15px;
-}
-
 .sidebar h1:first-child {
     margin-top: 0;
 }

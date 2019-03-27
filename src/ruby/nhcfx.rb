@@ -94,20 +94,20 @@ def render_function_to_svg(options = {})
         which = nil
         v = f['f']
         if v.include?('<')
-            f['src'] = 'nhcfx_lt.c'
+            f['type'] = 1
             parts = v.split('<').map { |x| x.strip }
             v = "(#{parts[0]}) - (#{parts[1]})"
         elsif v.include?('>')
-            f['src'] = 'nhcfx_lt.c'
+            f['type'] = 1
             parts = v.split('>').map { |x| x.strip }
             v = "(#{parts[1]}) - (#{parts[0]})"
         else
+            f['type'] = 0
             unless v.include?('=')
                 v = 'y = ' + v
             end
             parts = v.split('=').map { |x| x.strip }
             v = "(#{parts[0]}) - (#{parts[1]})"
-            f['src'] = 'nhcfx_eq.c'
         end
         f['f'] = v
         f
@@ -150,8 +150,8 @@ def render_function_to_svg(options = {})
             function_color = function_entry['color']
             function_color ||= options[:color]
             function_opacity = function_entry['opacity']
-            function_opacity ||= 1.0
-            args = [0, function, pixel_width, pixel_height, xmin, ymax, dx, dy,
+            function_opacity ||= function_entry['type'] == 1 ? 0.25 : 1.0
+            args = [function_entry['type'], function, pixel_width, pixel_height, xmin, ymax, dx, dy,
                     options[:aa_level], options[:line_width] * dpi / 25.4,
                     options[:pen_points]].map { |x| x.to_s }
             
@@ -209,7 +209,7 @@ def render_function_to_svg(options = {})
                         function_color ||= options[:color]
                         function_opacity = function_entry['opacity']
                         function_opacity ||= 1.0
-                        next unless function_entry['src'] == 'nhcfx_lt.c'
+                        next unless function_entry['type'] == 1
                         xml.image('xlink:href' => 'data:image/png;base64,' + function_entry[:png], 
                                 :x => padding[3], :y => padding[0],
                                 :width => graph_width, :height => graph_height)
@@ -290,7 +290,7 @@ def render_function_to_svg(options = {})
                         function_color ||= options[:color]
                         function_opacity = function_entry['opacity']
                         function_opacity ||= 1.0
-                        next unless function_entry['src'] == 'nhcfx_eq.c'
+                        next unless function_entry['type'] == 0
                         xml.image('xlink:href' => 'data:image/png;base64,' + function_entry[:png], 
                                 :x => padding[3], :y => padding[0],
                                 :width => graph_width, :height => graph_height)
