@@ -61,7 +61,8 @@ double f(double _x, double _y)
 #ifndef DUMMY
     return expression.value();
 #else
-    return y - sin(x);
+    return y - fmod(x, 1.0);
+//     return y - sin(x);
 //     return r - 3;
 #endif
 }
@@ -80,14 +81,53 @@ double subdivide(double sx, double sy, int level, int max_level)
             double x = xl + (sx + tx * step) * dx;
             double y = yt + (sy + ty * step) * dy;
             int sub_count = 0;
+            bool last_flag;
+            int pc = -1; // a point at which sign changed
+            double pc0x, pc0y, pc1x, pc1y;
             for (int i = 0; i < np; i++) {
-                if (f(x + (*pdx), y + (*pdy)) < 0)
+                bool flag = f(x + (*pdx), y + (*pdy)) < 0;
+                if (flag)
                     sub_count++;
+                if (i > 0 && pc == -1 && flag != last_flag)
+                {
+                    pc = i;
+                    // enforce negative sign at pc0x/pc0y
+                    if (flag)
+                    {
+                        pc0x = x + (*pdx);
+                        pc0y = y + (*pdy);
+                        pc1x = x + (*(pdx - 2));
+                        pc1y = y + (*(pdy - 2));
+                    }
+                    else
+                    {
+                        pc0x = x + (*(pdx - 2));
+                        pc0y = y + (*(pdy - 2));
+                        pc1x = x + (*pdx);
+                        pc1y = y + (*pdy);
+                    }
+                }
+                last_flag = flag;
                 pdx += 2;
                 pdy += 2;
             }
             if (sub_count > 0 && sub_count < np)
-                count += 1;
+            {
+                // sign changed between points pc-1 and pc
+                double pcmx = (pc0x + pc1x) * 0.5;
+                double pcmy = (pc0y + pc1y) * 0.5;
+                double fm = f(pcmx, pcmy);
+                if (fm < 0)
+                {
+                    if (fm > f(pc0x, pc0y))
+                        count +=1;
+                }
+                else
+                {
+                    if (fm < f(pc1x, pc1y))
+                        count += 1;
+                }
+            }
         }
     }
     // adaptive super sampling
