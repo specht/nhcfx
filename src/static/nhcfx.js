@@ -135,6 +135,14 @@ $(document).ready(function() {
                  'atan2(y, abs(x)) = cos(r*30)',
                  'atan2(y, abs(x)) = tan(r*3)',
                  'atan2(-y, abs(x)) = -log(r*3)',
+                 'sin(r) = phi - y',
+                 'sin(r) = phi - y^7',
+                 'cos(r) = phi - y',
+                 'cos(r) = phi - y^7',
+                 'tan(r) = phi - y',
+                 'tan(r) = phi - y^7',
+                 'cot(r) = phi - y',
+                 'cot(r) = phi - y^7',
                  '(4/pi)*((1/1)*sin(2*pi*(pi/10)*x)+(1/3)*sin(6*pi*(pi/10)*x)+(1/5)*sin(10*pi*(pi/10)*x)+(1/7)*sin(14*pi*(pi/10)*x)+(1/9)*sin(18*pi*(pi/10)*x)+(1/11)*sin(22*pi*(pi/10)*x)+(1/13)*sin(26*pi*(pi/10)*x)+(1/15)*sin(30*pi*(pi/10)*x)+(1/17)*sin(34*pi*(pi/10)*x)+(1/19)*sin(38*pi*(pi/10)*x)+(1/21)*sin(42*pi*(pi/10)*x)+(1/23)*sin(46*pi*(pi/10)*x)+(1/25)*sin(50*pi*(pi/10)*x)+(1/27)*sin(54*pi*(pi/10)*x))'
                 ], function(_, f) {
         var div = $('<a>').attr('id', 'gal_' + _).addClass('gallery_graph');
