@@ -43,7 +43,11 @@ double xl, yt, dx, dy;
 int aa_level;
 double lw;
 int np;
-double *pd;
+double *pd; // pen points
+double *pdm; // midpoint between point n and n+1
+double *fv; // values at pen points
+bool *fb; // sign at pen points (true == negative)
+int (*get_color)(double, double);
 
 inline double ln(double x)
 {
@@ -61,112 +65,83 @@ double f(double _x, double _y)
 #ifndef DUMMY
     return expression.value();
 #else
-    return y - fmod(x, 1.0);
+    double r = sqrt(x*x+y*y);
+    double phi = atan2(y, x);
+    return (r) - (2.5 + (fmod((phi+M_PI+0.2), (M_PI/8))) * 2);
 //     return y - sin(x);
 //     return r - 3;
 #endif
 }
 
-double subdivide(double sx, double sy, int level, int max_level)
+int get_color_area(double x, double y)
 {
-    double step = 1.0 / (1 << level);
-    double step2 = step * 0.5;
-    int count = 0;
-    for (int tx = 0; tx < 2; tx++)
-    {
-        for (int ty = 0; ty < 2; ty++)
-        {
-            double* pdx = pd + 0;
-            double* pdy = pd + 1;
-            double x = xl + (sx + tx * step) * dx;
-            double y = yt + (sy + ty * step) * dy;
-            int sub_count = 0;
-            bool last_flag;
-            int pc = -1; // a point at which sign changed
-            double pc0x, pc0y, pc1x, pc1y;
-            for (int i = 0; i < np; i++) {
-                bool flag = f(x + (*pdx), y + (*pdy)) < 0;
-                if (flag)
-                    sub_count++;
-                if (i > 0 && pc == -1 && flag != last_flag)
-                {
-                    pc = i;
-                    // enforce negative sign at pc0x/pc0y
-                    if (flag)
-                    {
-                        pc0x = x + (*pdx);
-                        pc0y = y + (*pdy);
-                        pc1x = x + (*(pdx - 2));
-                        pc1y = y + (*(pdy - 2));
-                    }
-                    else
-                    {
-                        pc0x = x + (*(pdx - 2));
-                        pc0y = y + (*(pdy - 2));
-                        pc1x = x + (*pdx);
-                        pc1y = y + (*pdy);
-                    }
-                }
-                last_flag = flag;
-                pdx += 2;
-                pdy += 2;
-            }
-            if (sub_count > 0 && sub_count < np)
-            {
-                // sign changed between points pc-1 and pc
-                double pcmx = (pc0x + pc1x) * 0.5;
-                double pcmy = (pc0y + pc1y) * 0.5;
-                double fm = f(pcmx, pcmy);
-                if (fm < 0)
-                {
-                    if (fm > f(pc0x, pc0y))
-                        count +=1;
-                }
-                else
-                {
-                    if (fm < f(pc1x, pc1y))
-                        count += 1;
-                }
-            }
-        }
-    }
-    // adaptive super sampling
-    if (count != 0 && count != 4 && level < max_level)
-    {
-        return (subdivide(sx, sy, level + 1, max_level) +
-                subdivide(sx + step2, sy, level + 1, max_level) +
-                subdivide(sx, sy + step2, level + 1, max_level) + 
-                subdivide(sx + step2, sy + step2, level + 1, max_level)) * 0.25;
-    }
-    else
-        return count ? 1.0 : 0.0;
+    return static_cast<int>(f(x, y));
 }
 
-double subdivide_lt(double sx, double sy, int level, int max_level)
+int get_color_line(double x, double y)
 {
-    double step = 1.0 / (1 << level);
-    double step2 = step * 0.5;
-    int count = 0;
-    for (int tx = 0; tx < 2; tx++)
-    {
-        for (int ty = 0; ty < 2; ty++)
+    double* pdx = pd + 0;
+    double* pdy = pd + 1;
+    
+    // for each pen point, collect f values in fv
+    for (int i = 0; i < np; i++) {
+        fv[i] = f(x + (*pdx), y + (*pdy));
+        fb[i] = fv[i] < 0;
+        pdx += 2;
+        pdy += 2;
+    }
+    
+    int ncount = 0;
+    for (int i = 0; i < np; i++) {
+        if (fb[i])
+            ncount += 1;
+        if (fb[i] ^ fb[(i + 1) % np])
         {
-            double x = xl + (sx + tx * step) * dx;
-            double y = yt + (sy + ty * step) * dy;
-            if (f(x, y) < 0)
-                count++;
+            double mv = f(x + pdm[i * 2 + 0], y + pdm[i * 2 + 1]);
+            bool mb = mv < 0;
+            bool crossing_zero = false;
+            if (fb[i] == mb)
+                crossing_zero = (mb == (fv[i] < mv));
+            else
+                crossing_zero = (mb != (mv < fv[(i + 1) % np]));
+            if (!crossing_zero)
+                return 0;
         }
     }
-    // adaptive super sampling
-    if (count != 0 && count != 4 && level < max_level)
+    return (ncount != 0 && ncount != np) ? 1 : 0;
+    /*
+     * fv[i]  mv  fb[i]  mb  fv[i]<mv  R
+     * -5     -4  1      1   1         1
+     * -5     -6  1      1   0         0
+     *  5      2  0      0   0         1
+     *  5      8  0      0   1         0
+     * mv  fv[i+1]  mb  fb[i+1]  mv<fv[i+1]  R
+     *  2   3       0   0        1           1
+     *  6   3       0   0        0           0
+     * -1  -3       1   1        0           1
+     * -7  -3       1   1        1           0
+     */
+}
+
+double subdivide(double sx, double sy, int level, double stepx, double stepy, int v00, int v20, int v02, int v22)
+{
+    int sum = v00 + v20 + v02 + v22;
+    if (level > 0 && sum != 0 && sum != 4)
     {
-        return (subdivide_lt(sx, sy, level + 1, max_level) +
-                subdivide_lt(sx + step2, sy, level + 1, max_level) +
-                subdivide_lt(sx, sy + step2, level + 1, max_level) + 
-                subdivide_lt(sx + step2, sy + step2, level + 1, max_level)) * 0.25;
+        int v10 = (*get_color)(sx + stepx, sy);
+        int v01 = (*get_color)(sx, sy + stepy);
+        int v11 = (*get_color)(sx + stepx, sy + stepy);
+        int v21 = (*get_color)(sx + stepx * 2, sy + stepy);
+        int v12 = (*get_color)(sx + stepx, sy + stepy * 2);
+        double stepx2 = stepx * 0.5;
+        double stepy2 = stepy * 0.5;
+        return (subdivide(sx, sy, level - 1, stepx2, stepy2, v00, v10, v01, v11) +
+                subdivide(sx + stepx, sy, level - 1, stepx2, stepy2, v10, v20, v11, v11) +
+                subdivide(sx, sy + stepy, level - 1, stepx2, stepy2, v01, v11, v02, v12) +
+                subdivide(sx + stepx, sy + stepy, level - 1, stepx2, stepy2, v11, v21, v12, v22)) * 0.25;
     }
     else
-        return (double)count/4.0;
+        return (double)sum * 0.25;
 }
 
 int main(int argc, char** argv)
@@ -195,7 +170,20 @@ int main(int argc, char** argv)
     expression.register_symbol_table(unknown_symbol_table);
     expression.register_symbol_table(symbol_table);
     parser.enable_unknown_symbol_resolver();
-    parser.compile(fx, expression);
+    if (!parser.compile(fx, expression))
+    {
+        for (std::size_t i = 0; i < parser.error_count(); ++i)
+        {
+            typedef exprtk::parser_error::type error_t;
+            error_t error = parser.get_error(i);
+            fprintf(stderr, "Error[%02ld] Position: %02ld Type: [%14s] Msg: %s\n",
+                    i, error.token.position,
+                    exprtk::parser_error::to_str(error.mode).c_str(),
+                    error.diagnostic.c_str());
+        }
+        return 1;
+    }    
+    
     std::vector<std::string> variable_list;
     unknown_symbol_table.get_variable_list(variable_list);
     for (auto& var_name : variable_list)
@@ -212,160 +200,67 @@ int main(int argc, char** argv)
     }
 #endif
 
-    unsigned char* buffer;
     pd = (double*)malloc(sizeof(double) * 2 * np);
-    double ssx = dx * 0.001;
-    double ssy = dy * 0.001;
-    double* scanlines = (double*)malloc(sizeof(double) * (width + 1) * 2);
-    double* line0 = scanlines;
-    double* line1 = scanlines + width + 1;
-    int sx0 = round(-xl / dx);
-    int sy0 = round(-yt / dy);
-    buffer = (unsigned char*)malloc(width * height);
-    unsigned int offset = 0;
+    pdm = (double*)malloc(sizeof(double) * 2 * np);
+    fv = (double*)malloc(sizeof(double) * np);
+    fb = (bool*)malloc(sizeof(bool) * np);
+    int* scanlines = (int*)malloc(sizeof(int) * (width + 1) * 2);
+    int* line0 = scanlines;
+    int* line1 = scanlines + width + 1;
     
     if (type == 0)
     {
-        // EQ
+        get_color = &get_color_line;
         for (int i = 0; i < np; i++)
         {
             pd[i * 2 + 0] = cos((double)i * 2 * M_PI / np) * lw * 0.5 * dx;
             pd[i * 2 + 1] = sin((double)i * 2 * M_PI / np) * lw * 0.5 * dy;
         }
-        
-        // find seed pixels
-        double y = yt;
-        int label_x = -1;
-        int label_y = -1;
-        long label_dist = 0;
-        for (int sy = 0; sy < height + 1; sy++)
+        for (int i = 0; i < np; i++)
         {
-            double* slp = line0;
-            double x = xl;
-            for (int sx = 0; sx < width + 1; sx++)
-            {
-                double d = f(x, y);
-                *(slp++) = d;
-                if (sx > 0 && sy > 0)
-                {
-                    unsigned char hit = 0;
-                    double p0, p1, p2;
-                    p0 = line1[sx - 1];
-                    p2 = line0[sx];
-                    if (p0 * p2 < 0)
-                    {
-                        p1 = f(x - ssx, y - ssy);
-                        if (p0 * p1 < 0 && fabs(p0 - p1) < fabs(p0 - p2))
-                            hit = 1;
-                        if (!hit)
-                        {
-                            p1 = f(x - dx + ssx, y - dy + ssy);
-                            if (p1 * p2 < 0 && fabs(p1 - p2) < fabs(p0 - p2))
-                                hit = 1;
-                        }
-                    }
-                    p0 = line1[sx];
-                    p2 = line0[sx - 1];
-                    if (!hit && p0 * p2 < 0)
-                    {
-                        p1 = f(x - dx + ssx, y - ssy);
-                        if (p0 * p1 < 0 && fabs(p0 - p1) < fabs(p0 - p2))
-                            hit = 1;
-                        if (!hit)
-                        {
-                            p1 = f(x - ssx, y - dy + ssy);
-                            if (p1 * p2 < 0 && fabs(p1 - p2) < fabs(p0 - p2))
-                                hit = 1;
-                        }
-                    }
-                    buffer[offset++] = hit;
-                    if (hit) 
-                    {
-                        if (sx == 1 || sy == 1 || sx == width || sy == height)
-                        {
-                            long dist = abs((sy - sy0) * (sx - sx0));
-                            if (dist > label_dist)
-                            {
-                                label_x = sx - 1;
-                                label_y = sy - 1;
-                                label_dist = dist;
-                            }
-                        }
-                    }
-                }
-                x += dx;
-            }
-            y += dy;
-            double* temp = line0;
-            line0 = line1;
-            line1 = temp;
+            pdm[i * 2 + 0] = (pd[i * 2 + 0] + pd[((i + 1) % np) * 2 + 0]) * 0.5;
+            pdm[i * 2 + 1] = (pd[i * 2 + 1] + pd[((i + 1) % np) * 2 + 1]) * 0.5;
         }
-
-        FILE *fl = fopen(argv[12], "w");
-        fprintf(fl, "%d %d", label_x, label_y);
-        fclose(fl);
-        
-        // dilate pixels and render graph
-        int w = ceil(lw / 2);
-        int old_percent = -1;
-        for (int y = 0; y < height; y++)
-        {
-            int percent = y * 100 / height;
-            if (percent != old_percent)
-            {
-                old_percent = percent;
-                fprintf(stderr, "\r%d", percent);
-            }
-            for (int x = 0; x < width; x++)
-            {
-                unsigned char found_pixel = 0;
-                for (int dy = -w; !found_pixel && dy <= w; dy++)
-                {
-                    for (int dx = -w; !found_pixel && dx <= w; dx++)
-                    {
-                        int tx = x + dx;
-                        int ty = y + dy;
-                        if (tx >= 0 && tx < width && ty >= 0 && ty < height)
-                        {
-                            if (buffer[ty * width + tx])
-                                found_pixel = 1;
-                        }
-                    }
-                }
-                // we have found a dilated pixel near the graph, 
-                // now render the graph at this pixel
-                unsigned char color = 0;
-                if (found_pixel)
-                    color = round(subdivide(x, y, 0, aa_level) * 255.0);
-                fwrite(&color, 1, 1, stdout);
-            }
-        }
-        fprintf(stderr, "\r%d\n", 100);
     }
     else
-    {
-        // LT
-        // dilate pixels and render graph
-        int old_percent = -1;
-        for (int y = 0; y < height; y++)
-        {
-            int percent = y * 100 / height;
-            if (percent != old_percent)
-            {
-                old_percent = percent;
-                fprintf(stderr, "\r%d", percent);
-            }
-            for (int x = 0; x < width; x++)
-            {
-                unsigned char color = subdivide_lt(x, y, 0, aa_level) * 255;
-                fwrite(&color, 1, 1, stdout);
-            }
-        }
-        fprintf(stderr, "\r%d\n", 100);
-    }
+        get_color = &get_color_area;
     
-    free(buffer);
+    for (int x = 0; x <= width; x++)
+        line0[x] = (*get_color)(xl + dx * x, yt);
+    int old_percent = -1;
+    for (int y = 1; y <= height; y++)
+    {
+        int percent = y * 100 / height;
+        if (percent != old_percent)
+        {
+            old_percent = percent;
+            fprintf(stderr, "\r%d", percent);
+        }
+        for (int x = 0; x <= width; x++)
+            line1[x] = (*get_color)(xl + dx * x, yt + dy * y);
+        // now we have line0 and line1
+        for (int x = 0; x < width; x++)
+        {
+            unsigned char color = 0;
+            int sum = line0[x] + line0[x + 1] + line1[x] + line1[x + 1];
+            if (sum == 0)
+                color = 0;
+            else if (sum == 4)
+                color = 255;
+            else
+                color = round(subdivide(xl + dx * x, yt + dy * (y - 1), aa_level, 0.5 * dx, 0.5 * dy, 
+                                        line0[x], line0[x + 1], line1[x], line1[x + 1]) * 255.0);
+            fwrite(&color, 1, 1, stdout);
+        }
+        // swap lines
+        int *temp = line0; line0 = line1; line1 = temp;
+    }
+    fprintf(stderr, "\r%d\n", 100);
+    
     free(scanlines);
+    free(fb);
+    free(fv);
+    free(pdm);
     free(pd);
     
     return 0;

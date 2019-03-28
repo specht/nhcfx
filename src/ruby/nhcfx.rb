@@ -93,14 +93,8 @@ def render_function_to_svg(options = {})
     options[:f].map! do |f|
         which = nil
         v = f['f']
-        if v.include?('<')
+        if v.include?('<') || v.include?('>')
             f['type'] = 1
-            parts = v.split('<').map { |x| x.strip }
-            v = "(#{parts[0]}) - (#{parts[1]})"
-        elsif v.include?('>')
-            f['type'] = 1
-            parts = v.split('>').map { |x| x.strip }
-            v = "(#{parts[1]}) - (#{parts[0]})"
         else
             f['type'] = 0
             unless v.include?('=')
@@ -155,6 +149,8 @@ def render_function_to_svg(options = {})
                     options[:aa_level], options[:line_width] * dpi / 25.4,
                     options[:pen_points]].map { |x| x.to_s }
             
+#             STDERR.puts args.join(' ')
+#             
             src_sha1 = Digest::SHA1.hexdigest(args.join(' '))
             function_entry[:src_sha1] = src_sha1
             fx_png_path = File.join(dir, src_sha1 + '.fx.png')
