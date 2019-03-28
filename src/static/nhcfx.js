@@ -204,7 +204,8 @@ $(document).ready(function() {
         }
         else
         {
-            window.location.hash = window.current_tag;
+            if (typeof(window.current_tag) !== 'undefined')
+                window.location.hash = window.current_tag;
         }
     };
 //     var params = new URLSearchParams(window.location.search);
