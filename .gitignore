@@ -4,4 +4,5 @@ logs
 docker/ruby/Gemfile
 docker/ruby/interleave.c
 docker/ruby/nhcfx.cpp
+docker/nginx/default.conf
 
