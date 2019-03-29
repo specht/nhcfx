@@ -74,12 +74,29 @@ function render()
         parseFloat($('#padding_top').val()),
         parseFloat($('#padding_right').val()),
         parseFloat($('#padding_bottom').val()),
-        parseFloat($('#padding_left').val())];
+        parseFloat($('#padding_left').val())
+    ];
+    options.grid = [];
+    jQuery.each($('.grid_options .row'), function(_, grid_options) {
+        var delta = parseFloat($(grid_options).find('input').eq(0).val());
+        var width = parseFloat($(grid_options).find('input').eq(1).val());
+        var color = rgb_to_hex($(grid_options).find('.swatch').css('background-color'));
+        options.grid.push({space: delta, width: width, color: color});
+    });
+    options.render_background = $('#render_background').prop('checked');
+    options.render_grid = $('#render_grid').prop('checked');
+    options.render_x_axis = $('#render_x_axis').prop('checked');
+    options.render_y_axis = $('#render_y_axis').prop('checked');
+    options.render_x_labels = $('#render_x_labels').prop('checked');
+    options.render_y_labels = $('#render_y_labels').prop('checked');
+    
+    options.x_labels_delta = parseFloat($('#x_labels_delta').val());
+    options.y_labels_delta = parseFloat($('#y_labels_delta').val());
     api_call('/api/render', options, function(data) {
         $('#graph').empty();
         $('#graph').html(data.svg);
         $('#dl_buttons').empty();
-        var dl_svg = $('<a>').addClass('btn btn btn-secondary').attr('href', '/cache/' + data.tag + '.svg').html('Download SVG');
+        var dl_svg = $('<a>').addClass('btn btn btn-outline-secondary').attr('href', '/cache/' + data.tag + '.svg').html("<i class='fa fa-download'></i>&nbsp;&nbsp;Download SVG");
         $('#dl_buttons').append(dl_svg);
         window.location.hash = data.tag;
         window.current_tag = data.tag;
@@ -103,11 +120,12 @@ $(document).ready(function() {
         $('.sb_' + which).show();
         $('.cn_' + which).show();
         $('.mi_' + which).addClass('active');
+        $('.canhide').toggleClass('hidden', which === 'gal');
     });
     $('#render').click(function() {
         render();
     });
-    $('#f0').keydown(function(e) {
+    $('.rerender').keydown(function(e) {
         if (e.keyCode === 13)
             render();
     });
@@ -151,6 +169,8 @@ $(document).ready(function() {
         options.range = [-4, -4, 4, 4];
         options.padding = [5, 5, 5, 5];
         options.scale = 0.5;
+        options.render_x_labels = false;
+        options.render_y_labels = false;
         if (f.indexOf('=') === -1)
             f = 'y = ' + f;
         options.f = [{f: f, color: '#143b86'}, {f: f.replace('=', '<'), color: '#729fcf', opacity: 0.3}];

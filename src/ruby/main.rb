@@ -9,6 +9,10 @@ require 'yaml'
 
 require './nhcfx.rb'
 
+module Boolean; end
+class TrueClass; include Boolean; end
+class FalseClass; include Boolean; end
+
 class Main < Sinatra::Base
     def assert(condition, message = 'assertion failed')
         raise message unless condition
@@ -69,9 +73,12 @@ class Main < Sinatra::Base
             :optional_keys => [
                 :f, :range, :padding, :scale, :tick_length,
                 :font_size, :label_padding, :dpi, :line_width,
-                :aa_level, :pen_points, :color, :grid
+                :aa_level, :pen_points, :color, :grid,
+                :render_background, :render_grid,
+                :render_x_axis, :render_x_labels, :x_labels_delta,
+                :render_y_axis, :render_y_labels, :y_labels_delta
             ],
-            :max_body_length => 8192,
+            :max_body_length => 32768,
             :types => {
                 :f => Array,
                 :range => Array,
@@ -85,7 +92,15 @@ class Main < Sinatra::Base
                 :aa_level => Numeric,
                 :pen_points => Numeric,
                 :color => String,
-                :grid => Array
+                :grid => Array,
+                :render_background => Boolean,
+                :render_grid => Boolean,
+                :render_x_axis => Boolean,
+                :render_x_labels => Boolean,
+                :x_labels_delta => Numeric,
+                :render_y_axis => Boolean,
+                :render_y_labels => Boolean,
+                :y_labels_delta => Numeric
             })
         tag = render_function_to_svg(data)
         respond(:tag => tag, :svg => File.read("/cache/#{tag}.svg"))

@@ -67,6 +67,14 @@ def render_function_to_svg(options = {})
     options[:f] ||= []
     options[:grid] ||= [{'space' => 0.5, 'color' => '#aaa', 'width' => 0.05}, 
                         {'space' => 1.0, 'color' => '#888', 'width' => 0.05}]
+    options[:x_labels_delta] ||= 1.0
+    options[:y_labels_delta] ||= 1.0
+    options[:render_background] = true unless options.include?(:render_background)
+    options[:render_grid] = true unless options.include?(:render_grid)
+    options[:render_x_axis] = true unless options.include?(:render_x_axis)
+    options[:render_x_labels] = true unless options.include?(:render_x_labels)
+    options[:render_y_axis] = true unless options.include?(:render_y_axis)
+    options[:render_y_labels] = true unless options.include?(:render_y_labels)
     
     xmin, ymin, xmax, ymax = *options[:range]
     padding = options[:padding]
@@ -195,8 +203,10 @@ def render_function_to_svg(options = {})
                     end
                 end
                 xml.g do
-                    xml.rect(:x => 0, :y => 0, :width => width, :height => height,
-                            :style => 'fill:#fff; stroke: none;')
+                    if options[:render_background]
+                        xml.rect(:x => 0, :y => 0, :width => width, :height => height,
+                                 :style => 'fill:#fff; stroke: none;')
+                    end
                     
                     # draw 'lt' functions
                     options[:f].each do |function_entry|
@@ -211,73 +221,81 @@ def render_function_to_svg(options = {})
                                 :width => graph_width, :height => graph_height)
                     end
                     
-                    # draw grid lines (clipped against graph area)
-                    xml.g('clip-path': 'url(#a)') do
-                        options[:grid].each do |grid|
-                            grid_lines(xml, t, 0, xmin, xmax, ymin, ymax, grid['space'], grid['color'], grid['width'])
-                            grid_lines(xml, t, 1, ymin, ymax, xmin, xmax, grid['space'], grid['color'], grid['width'])
+                    if options[:render_grid]
+                        # draw grid lines (clipped against graph area)
+                        xml.g('clip-path': 'url(#a)') do
+                            options[:grid].each do |grid|
+                                grid_lines(xml, t, 0, xmin, xmax, ymin, ymax, grid['space'], grid['color'], grid['width'])
+                                grid_lines(xml, t, 1, ymin, ymax, xmin, xmax, grid['space'], grid['color'], grid['width'])
+                            end
                         end
                     end
                     
                     # draw X axis
-                    grid_lines(xml, t, 1, 0, 0, xmin, xmax + 0.1 / scale, 1.0, '#000', 0.05)
-
-                    # draw X arrow
-                    x, y = t.t(xmax, 0)
-                    xml.g(:transform => "translate(#{x + 4}, #{y})") do
-                        xml.path(:d => "M 0,0 -3,-0.75 -3,0.75 z", :style => 'fill:#000; stroke: none;')
+                    if options[:render_x_axis]
+                        grid_lines(xml, t, 1, 0, 0, xmin, xmax + 0.1 / scale, 1.0, '#000', 0.05)
+                        # draw X arrow
+                        x, y = t.t(xmax, 0)
+                        xml.g(:transform => "translate(#{x + 4}, #{y})") do
+                            xml.path(:d => "M 0,0 -3,-0.75 -3,0.75 z", :style => 'fill:#000; stroke: none;')
+                        end
+                        # draw X label
+                        sx, sy = t.t(xmax, 0)
+                        xml << "<text x='#{sx + 1.5}' y='#{sy + (label_padding + 1.0) * font_size + tick_length * 0.5}' text-anchor='middle' style='font-family: Arial; font-size: #{font_size}px;'>x</text>"
                     end
                     
                     # draw Y axis
-                    grid_lines(xml, t, 0, 0, 0, ymin, ymax + 0.1 / scale, 1.0, '#000', 0.05)
-                    
-                    # draw Y arrow
-                    x, y = t.t(0, ymax)
-                    xml.g(:transform => "translate(#{x}, #{y - 4})") do
-                        xml.path(:d => "M 0,0 0.75,3 -0.75,3 z", :style => 'fill:#000; stroke: none;')
+                    if options[:render_y_axis]
+                        grid_lines(xml, t, 0, 0, 0, ymin, ymax + 0.1 / scale, 1.0, '#000', 0.05)
+                        # draw Y arrow
+                        x, y = t.t(0, ymax)
+                        xml.g(:transform => "translate(#{x}, #{y - 4})") do
+                            xml.path(:d => "M 0,0 0.75,3 -0.75,3 z", :style => 'fill:#000; stroke: none;')
+                        end
+                        # draw Y label
+                        sx, sy = t.t(0, ymax)
+                        xml << "<text x='#{sx - tick_length * 0.5 - label_padding * font_size}' y='#{sy - (label_padding + 1.0) * font_size + tick_length}' text-anchor='end' style='font-family: Arial; font-size: #{font_size}px;'>y</text>"
                     end
                     
-                    # draw X ticks and labels
-                    x = xmin.floor + 1.0
-                    while x <= xmax - 0.5 do
-                        unless x == 0
-                            sx, sy = t.t(x, 0)
-                            xml.line(:x1 => sx, :y1 => sy, :x2 => sx, :y2 => sy + tick_length,
-                                    :style => "stroke: #000; stroke-width: 0.075mm;")
-                            lx = "#{x}"
-                            while lx[-1] == '0' do lx.chop! end;
-                            lx.chop! if lx[-1] == '.'
-                            xml << "<text x='#{sx}' y='#{sy + (label_padding + 1.0) * font_size + tick_length}' text-anchor='middle' style='font-family: Arial; font-size: #{font_size}px;'>#{lx}</text>"
+                    if options[:render_x_labels]
+                        # draw X ticks and labels
+                        x = xmin.floor + 1.0
+                        while x <= xmax - 0.5 do
+                            unless x == 0
+                                sx, sy = t.t(x, 0)
+                                xml.line(:x1 => sx, :y1 => sy, :x2 => sx, :y2 => sy + tick_length,
+                                        :style => "stroke: #000; stroke-width: 0.075mm;")
+                                lx = "#{x}"
+                                while lx[-1] == '0' do lx.chop! end;
+                                lx.chop! if lx[-1] == '.'
+                                xml << "<text x='#{sx}' y='#{sy + (label_padding + 1.0) * font_size + tick_length}' text-anchor='middle' style='font-family: Arial; font-size: #{font_size}px;'>#{lx}</text>"
+                            end
+                            x += options[:x_labels_delta]
                         end
-                        x += 1.0
                     end
                     
-                    # draw Y ticks and labels
-                    y = ymin.floor + 1.0
-                    while y <= ymax - 0.5 do
-                        unless y == 0
-                            sx, sy = t.t(0, y)
-                            xml.line(:x1 => sx - tick_length, :y1 => sy, :x2 => sx, :y2 => sy,
-                                    :style => "stroke: #000; stroke-width: 0.075mm;")
-                            ly = "#{y}"
-                            while ly[-1] == '0' do ly.chop! end;
-                            ly.chop! if ly[-1] == '.'
-                            xml << "<text x='#{sx - tick_length - label_padding * font_size}' y='#{sy + font_size * 0.4}' text-anchor='end' style='font-family: Arial; font-size: #{font_size}px;'>#{ly}</text>"
+                    if options[:render_y_labels]
+                        # draw Y ticks and labels
+                        y = ymin.floor + 1.0
+                        while y <= ymax - 0.5 do
+                            unless y == 0
+                                sx, sy = t.t(0, y)
+                                xml.line(:x1 => sx - tick_length, :y1 => sy, :x2 => sx, :y2 => sy,
+                                        :style => "stroke: #000; stroke-width: 0.075mm;")
+                                ly = "#{y}"
+                                while ly[-1] == '0' do ly.chop! end;
+                                ly.chop! if ly[-1] == '.'
+                                xml << "<text x='#{sx - tick_length - label_padding * font_size}' y='#{sy + font_size * 0.4}' text-anchor='end' style='font-family: Arial; font-size: #{font_size}px;'>#{ly}</text>"
+                            end
+                            y += options[:y_labels_delta]
                         end
-                        y += 1.0
                     end
 
-                    # draw 0 label
-                    sx, sy = t.t(0, 0)
-                    xml << "<text x='#{sx - tick_length - label_padding * font_size}' y='#{sy + (label_padding + 1.0) * font_size + tick_length}' text-anchor='end' style='font-family: Arial; font-size: #{font_size}px;'>0</text>"
-                    
-                    # draw X label
-                    sx, sy = t.t(xmax, 0)
-                    xml << "<text x='#{sx + 1.5}' y='#{sy + (label_padding + 1.0) * font_size + tick_length * 0.5}' text-anchor='middle' style='font-family: Arial; font-size: #{font_size}px;'>x</text>"
-                    
-                    # draw Y label
-                    sx, sy = t.t(0, ymax)
-                    xml << "<text x='#{sx - tick_length * 0.5 - label_padding * font_size}' y='#{sy - (label_padding + 1.0) * font_size + tick_length}' text-anchor='end' style='font-family: Arial; font-size: #{font_size}px;'>y</text>"
+                    if options[:render_x_labels] || options[:render_y_labels]
+                        # draw 0 label
+                        sx, sy = t.t(0, 0)
+                        xml << "<text x='#{sx - tick_length - label_padding * font_size}' y='#{sy + (label_padding + 1.0) * font_size + tick_length}' text-anchor='end' style='font-family: Arial; font-size: #{font_size}px;'>0</text>"
+                    end
                     
                     # draw 'eq' functions
                     options[:f].each do |function_entry|

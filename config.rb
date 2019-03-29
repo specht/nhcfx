@@ -72,8 +72,8 @@ if PROFILE.include?(:static)
 
             charset utf-8;
 
-            location /cache/* {
-                root /cache;
+            location /cache {
+                root /;
             }
 
             location /api {

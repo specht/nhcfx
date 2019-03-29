@@ -3,12 +3,12 @@
     <title>Dr. N. Harold Cham's Function Renderer</title>
     <link href="/bower_components/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="/bower_components/font-awesome/css/all.min.css" rel="stylesheet">
-    <link href="/styles.css?3" rel="stylesheet">
-    <link href="/dashboard.css?3" rel="stylesheet">
+    <link href="/styles.css?4" rel="stylesheet">
+    <link href="/dashboard.css?4" rel="stylesheet">
     <script src="/bower_components/jquery/dist/jquery.min.js"></script>
     <script src="/bower_components/popper.js/dist/umd/popper.min.js"></script>
     <script src="/bower_components/bootstrap/dist/js/bootstrap.min.js"></script>
-    <script src="nhcfx.js?3"></script>
+    <script src="nhcfx.js?4"></script>
     <script src="cling-colors.js"></script>
 </head>
 
@@ -35,7 +35,7 @@
 
     <div class="container-fluid">
       <div class="row">
-        <nav class="d-md-block bg-light sidebar">
+        <nav class="d-md-block bg-light sidebar canhide">
           <div class="sidebar sidebar-sticky" style='padding-left: 15px; padding-right: 15px;'>
             <div class='sb sb_fx'>
                 <h1 class='drawer-header'>Equations<i class="fa caret fa-caret-down"></i></h1>
@@ -43,7 +43,7 @@
                     <div class="form-group">
                         <div class='row align-items-center'>
                             <div class='input-group col-md-12'>
-                                <input type="text" class="form-control" id="f0">
+                                <input type="text" class="form-control rerender" id="f0">
                                 <div class='swatch'></div> 
                                 <div class="input-group-append">
                                     <button class="btn btn-outline-secondary dropdown-toggle" type="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></button>
@@ -70,23 +70,23 @@
                                 <div class="input-group-prepend">
                                     <div class="input-group-text">X:</div>
                                 </div>
-                                <input type="text" class="form-control" id="xmin" value='-8' style='text-align: center;' />
-                                <input type="text" class="form-control" id="xmax" value='8' style='text-align: center;' />
+                                <input type="number" inputmode="numeric" class="form-control rerender" id="xmin" value='-8' style='text-align: center;' />
+                                <input type="number" inputmode="numeric" class="form-control rerender" id="xmax" value='8' style='text-align: center;' />
                                 <div style='display: inline-block; position: absolute; background-color: #fff; left: 95px; padding: 6px; z-index: 200;'>&hellip;</div>
                             </div>
                             <div class="input-group mb-2 col-md-6 align-items-center">
                                 <div class="input-group-prepend">
                                     <div class="input-group-text">Y:</div>
                                 </div>
-                                <input type="text" class="form-control" id="ymin" value='-4' style='text-align: center;'>
-                                <input type="text" class="form-control" id="ymax" value='4' style='text-align: center;'>
+                                <input type="number" inputmode="numeric" class="form-control rerender" id="ymin" value='-4' style='text-align: center;'>
+                                <input type="number" inputmode="numeric" class="form-control rerender" id="ymax" value='4' style='text-align: center;'>
                                 <div style='display: inline-block; position: absolute; background-color: #fff; left: 95px; padding: 6px; z-index: 200;'>&hellip;</div>
                             </div>
                         </div>
                         <div class='row align-items-center'>
                             <label class='col-md-3'>Scale:</label>
                             <div class="input-group mb-2 col-md-9">
-                                <input type="text" class="form-control addon-pre-inline" id="scale" value='1.0'>
+                                <input type="number" inputmode="numeric" class="form-control addon-pre-inline rerender" id="scale" value='1.0'>
                                 <div class="input-group-append">
                                     <div class="input-group-text addon-inline"><span>cm</span></div>
                                 </div>
@@ -95,18 +95,18 @@
                     </div>
                 </div>
                 <h1 class='drawer-header closed'>Grid<i class="fa caret fa-caret-down"></i></h1>
-                <div class='drawer' style='display: none;'>
+                <div class='drawer grid_options' style='display: none;'>
                     <div class="form-group">
                         <div class='row' style='margin: 5px -15px;'>
                             <div class='input-group col-md-12'>
                                 <div class="input-group-prepend">
-                                    <div class="input-group-text">&Delta;</div>
+                                    <div class="input-group-text">&Delta;:</div>
                                 </div>
-                                <input type="text" class="form-control" style='text-align: center;' value='0.5'>
+                                <input type="number" inputmode="numeric" class="form-control rerender" style='text-align: center;' value='0.5'>
                                 <div class="input-group-prepend">
                                     <div class="input-group-text" style='border-left: 0;'>Pen:</div>
                                 </div>
-                                <input type="text" class="form-control addon-pre-inline" value='0.05'>
+                                <input type="number" inputmode="numeric" class="form-control addon-pre-inline rerender" value='0.05'>
                                 <div class="input-group-prepend">
                                     <div class="input-group-text addon-inline" style='padding-right: 30px; border-right: 0;'><span style='margin-right: 15px;'>mm</span></div>
                                 </div>
@@ -129,13 +129,13 @@
                         <div class='row' style='margin: 5px -15px;'>
                             <div class='input-group col-md-12'>
                                 <div class="input-group-prepend">
-                                    <div class="input-group-text">&Delta;</div>
+                                    <div class="input-group-text">&Delta;:</div>
                                 </div>
-                                <input type="text" class="form-control" style='text-align: center;' value='1'>
+                                <input type="number" inputmode="numeric" class="form-control rerender" style='text-align: center;' value='1'>
                                 <div class="input-group-prepend">
                                     <div class="input-group-text" style='border-left: 0;'>Pen:</div>
                                 </div>
-                                <input type="text" class="form-control addon-pre-inline" value='0.05'>
+                                <input type="number" inputmode="numeric" class="form-control addon-pre-inline rerender" value='0.05'>
                                 <div class="input-group-prepend">
                                     <div class="input-group-text addon-inline" style='padding-right: 30px; border-right: 0;'><span style='margin-right: 15px;'>mm</span></div>
                                 </div>
@@ -157,6 +157,78 @@
                         </div>
                     </div>
                 </div>
+                <h1 class='drawer-header closed'>Axes<i class="fa caret fa-caret-down"></i></h1>
+                <div class='drawer axes_options' style='display: none;'>
+                    <div class="form-group">
+                        <div class='row' style='margin: 5px -15px;'>
+                            <div class='input-group col-md-6 pr-1'>
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">X axis &Delta;:</div>
+                                </div>
+                                <input type="number" inputmode="numeric" class="form-control rerender" id='x_labels_delta' style='text-align: center;' value='1.0'>
+                            </div>
+                            <div class='input-group col-md-6 pl-1'>
+                                <div class="input-group-prepend">
+                                    <div class="input-group-text">Y axis &Delta;:</div>
+                                </div>
+                                <input type="number" inputmode="numeric" class="form-control rerender" id='y_labels_delta' style='text-align: center;' value='1.0'>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <h1 class='drawer-header closed'>Toggles<i class="fa caret fa-caret-down"></i></h1>
+                <div class='drawer' style='display: none;'>
+                    <div class="form-group">
+                        <div class='row' style='margin: 5px -15px;'>
+                            <div class='input-group col-md-7 pr-0'>
+                                <label class="switch">
+                                    <input type="checkbox" checked id='render_background'>
+                                    <span class="slider round"></span>
+                                </label>
+                                <label class='noselect' for='render_background'>Draw background</label>
+                            </div>
+                            <div class='input-group col-md-5 pl-0'>
+                                <label class="switch">
+                                    <input type="checkbox" checked id='render_grid'>
+                                    <span class="slider round"></span>
+                                </label>
+                                <label class='noselect' for='render_grid'>Draw grid</label>
+                            </div>
+                        </div>
+                        <div class='row' style='margin: 5px -15px;'>
+                            <div class='input-group col-md-6 pr-0'>
+                                <label class="switch">
+                                    <input type="checkbox" checked id='render_x_axis'>
+                                    <span class="slider round"></span>
+                                </label>
+                                <label class='noselect' for='render_x_axis'>Draw X axis</label>
+                            </div>
+                            <div class='input-group col-md-6 pl-0'>
+                                <label class="switch">
+                                    <input type="checkbox" checked id='render_y_axis'>
+                                    <span class="slider round"></span>
+                                </label>
+                                <label class='noselect' for='render_y_axis'>Draw Y axis</label>
+                            </div>
+                        </div>
+                        <div class='row' style='margin: 5px -15px;'>
+                            <div class='input-group col-md-6 pr-0'>
+                                <label class="switch">
+                                    <input type="checkbox" checked id='render_x_labels'>
+                                    <span class="slider round"></span>
+                                </label>
+                                <label class='noselect' for='render_x_labels'>Draw X labels</label>
+                            </div>
+                            <div class='input-group col-md-6 pl-0'>
+                                <label class="switch">
+                                    <input type="checkbox" checked id='render_y_labels'>
+                                    <span class="slider round"></span>
+                                </label>
+                                <label class='noselect' for='render_y_labels'>Draw Y labels</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
                 <h1 class='drawer-header closed'>Padding<i class="fa caret fa-caret-down"></i></h1>
                 <div class='drawer' style='display: none''>
                     <div class="form-group">
@@ -165,7 +237,7 @@
                                 <div class="input-group-prepend">
                                     <div class="input-group-text" style='width: 75px;'>Left:</div>
                                 </div>
-                                <input type="text" class="form-control addon-pre-inline" id="padding_left" value='5' style='text-align: center;' />
+                                <input type="number" inputmode="numeric" class="form-control addon-pre-inline rerender" id="padding_left" value='5' style='text-align: center;' />
                                 <div class="input-group-append">
                                     <div class="input-group-text addon-inline"><span>mm</span></div>
                                 </div>
@@ -174,7 +246,7 @@
                                 <div class="input-group-prepend">
                                     <div class="input-group-text" style='width: 75px;'>Right:</div>
                                 </div>
-                                <input type="text" class="form-control addon-pre-inline" id="padding_right" value='5' style='text-align: center;' />
+                                <input type="number" inputmode="numeric" class="form-control addon-pre-inline rerender" id="padding_right" value='5' style='text-align: center;' />
                                 <div class="input-group-append">
                                     <div class="input-group-text addon-inline"><span>mm</span></div>
                                 </div>
@@ -185,7 +257,7 @@
                                 <div class="input-group-prepend">
                                     <div class="input-group-text" style='width: 75px;'>Top:</div>
                                 </div>
-                                <input type="text" class="form-control addon-pre-inline" id="padding_top" value='5' style='text-align: center;' />
+                                <input type="number" inputmode="numeric" class="form-control addon-pre-inline rerender" id="padding_top" value='5' style='text-align: center;' />
                                 <div class="input-group-append">
                                     <div class="input-group-text addon-inline"><span>mm</span></div>
                                 </div>
@@ -194,7 +266,7 @@
                                 <div class="input-group-prepend">
                                     <div class="input-group-text" style='width: 75px;'>Bottom:</div>
                                 </div>
-                                <input type="text" class="form-control addon-pre-inline" id="padding_bottom" value='5' style='text-align: center;' />
+                                <input type="number" inputmode="numeric" class="form-control addon-pre-inline rerender" id="padding_bottom" value='5' style='text-align: center;' />
                                 <div class="input-group-append">
                                     <div class="input-group-text addon-inline"><span>mm</span></div>
                                 </div>
@@ -208,13 +280,13 @@
                         <div class='row align-items-center'>
                             <label class='col-md-7'>Pen points:</label>
                             <div class="input-group mb-2 col-md-5">
-                                <input type="text" class="form-control" id="pen_points" value='8'>
+                                <input type="number" inputmode="numeric" class="form-control rerender" id="pen_points" value='8'>
                             </div>
                         </div>
                         <div class='row align-items-center'>
                             <label class='col-md-7'>Pen width:</label>
                             <div class="input-group mb-2 col-md-5">
-                                <input type="text" class="form-control" id="line_width" value='0.4'>
+                                <input type="number" inputmode="numeric" class="form-control rerender" id="line_width" value='0.4'>
                                 <div class="input-group-append">
                                     <div class="input-group-text">mm</div>
                                 </div>
@@ -223,7 +295,7 @@
                         <div class='row align-items-center'>
                             <label class='col-md-7'>Graph resolution:</label>
                             <div class="input-group mb-2 col-md-5">
-                                <input type="text" class="form-control" id="dpi" value='150'>
+                                <input type="number" inputmode="numeric" class="form-control rerender" id="dpi" value='150'>
                                 <div class="input-group-append">
                                     <div class="input-group-text">dpi</div>
                                 </div>
@@ -232,22 +304,16 @@
                         <div class='row align-items-center'>
                             <label class='col-md-7'>Antialiasing level:</label>
                             <div class="input-group mb-2 col-md-5">
-                                <input type="text" class="form-control" id="aa_level" value='2'>
+                                <input type="number" inputmode="numeric" class="form-control rerender" id="aa_level" value='2'>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class='drawer-fixed'>
-                    <button id='render' class='btn btn btn-primary'>Render</button>
-<!--                     <div id='dl_buttons'></div> -->
+                    <button id='render' class='btn btn btn-success'><i class='fa fa-play'></i>&nbsp;&nbsp;Render</button>
+                    <span id='dl_buttons'></span>
                 </div>
                 <div style='margin-top: 20px;'></div>
-            </div>
-            <div class='sb sb_gal'>
-                <div class='row'>
-                    <strong>Gallery</strong>
-                    <hr />
-                </div>
             </div>
             <div class='sb sb_doc'>
                 <div class='row'>
@@ -265,7 +331,7 @@
                     <div id='graph'></div>
                 </div>
             </div>
-            <div class='cn cn_gal'>
+            <div class='cn cn_gal' style='padding-left: 0;'>
                 <div class='row gallery_graphs'>
                 </div>
             </div>
