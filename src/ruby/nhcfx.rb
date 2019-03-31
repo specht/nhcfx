@@ -106,10 +106,10 @@ def render_function_to_svg(options = {})
         else
             f['type'] = 0
             unless v.include?('=')
-                v = 'y = ' + v
+                v += ' = y'
             end
             parts = v.split('=').map { |x| x.strip }
-            v = "(#{parts[0]}) - (#{parts[1]})"
+            v = "#{parts[0]} - (#{parts[1]})"
         end
         f['f'] = v
         f
