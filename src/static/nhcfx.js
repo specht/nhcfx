@@ -94,18 +94,21 @@ function render()
     options.y_labels_delta = parseFloat($('#y_labels_delta').val());
     api_call('/api/render', options, function(data) {
         $('#graph').empty();
-        $('#graph').html(data.svg);
-        $('#dl_buttons').empty();
-        var dl_svg = $('<a>').addClass('btn btn btn-outline-secondary').attr('href', '/cache/' + data.tag + '.svg').html("<i class='fa fa-download'></i>&nbsp;&nbsp;Download SVG");
-        $('#dl_buttons').append(dl_svg);
-        window.location.hash = data.tag;
-        window.current_tag = data.tag;
-//             var searchParams = new URLSearchParams(window.location.search);
-//             if (data.tag !== window.tag)
-//             {
-//                 searchParams.set("tag", data.tag);
-//                 window.location.search = searchParams.toString();
-//             }
+        if (data.success) 
+        {
+            $('#graph').html(data.svg);
+            $('#dl_buttons').empty();
+            var dl_svg = $('<a>').addClass('btn btn btn-outline-secondary').attr('href', '/cache/' + data.tag + '.svg').html("<i class='fa fa-download'></i>&nbsp;&nbsp;Download SVG");
+            $('#dl_buttons').append(dl_svg);
+            window.location.hash = data.tag;
+            window.current_tag = data.tag;
+    //             var searchParams = new URLSearchParams(window.location.search);
+    //             if (data.tag !== window.tag)
+    //             {
+    //                 searchParams.set("tag", data.tag);
+    //                 window.location.search = searchParams.toString();
+    //             }
+        }
     });
 }
 

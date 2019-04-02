@@ -157,7 +157,7 @@ def render_function_to_svg(options = {})
                     options[:aa_level], options[:line_width] * dpi / 25.4,
                     options[:pen_points]].map { |x| x.to_s }
             
-#             STDERR.puts args.join(' ')
+            STDERR.puts args.join(' ')
 #             
             src_sha1 = Digest::SHA1.hexdigest(args.join(' '))
             function_entry[:src_sha1] = src_sha1
@@ -173,13 +173,14 @@ def render_function_to_svg(options = {})
 #                         t1 = Time.now.to_f; puts "Render raw: #{t1 - t0}"; t0 = t1
             end
 
-            stdout, thread = Open3.pipeline_r(
+            stdout, threads = Open3.pipeline_r(
                 "convert \"#{fx_png_path}\" gray:/dev/stdout",
                 "/app_bin/interleave #{function_color[1, 2].to_i(16)} #{function_color[3, 2].to_i(16)} #{function_color[5, 2].to_i(16)} #{(function_opacity * 255).to_i}",
                 "convert -size #{pixel_width}x#{pixel_height} -depth 8 rgba:- png32:-")
             png_base64 = Base64.strict_encode64(stdout.read)
             stdout.close
             function_entry[:png] = png_base64
+            raise 'error' unless threads.all? { |t| t.value.success? }
         end
 #                         t1 = Time.now.to_f; puts "Interleave: #{t1 - t0}"; t0 = t1
         builder = Nokogiri::XML::Builder.new(:encoding => 'UTF-8') do |xml|

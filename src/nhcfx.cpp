@@ -5,9 +5,9 @@
 
 using namespace std;
 
-// gcc -O1 -o /app_bin/nhcfx -I/src/ext/exprtk/ /src/nhcfx.cpp -lstdc++ -lm && time /app_bin/nhcfx 0 "sin(x)-y" 236 236 -4 4 0.03389830508474576 -0.03389830508474576 2 2.362204724409449 8 /tmp/coords.txt | convert -size 236x236 -depth 8 gray:- /cache/out.png
+// gcc -O1 -o /app_bin/nhcfx -I/src/ext/exprtk/ /src/nhcfx.cpp -lstdc++ -lm && time /app_bin/nhcfx 0 "0.02/x - (y)" 590 590 -1 1 0.003389830508474576 -0.003389830508474576 2 29.52755905511811 8 /tmp/coords.txt | convert -size 590x590 -depth 8 gray:- /cache/out.png
 
-// #define DUMMY
+#define DUMMY
 
 #ifndef DUMMY
 #include "exprtk.hpp"
@@ -35,6 +35,7 @@ exprtk::parser<double> parser;
 // 10. line width (double, only if type == eq)
 // 11. pen points (int, only if type == eq)
 // 12. output text file for label coordinates
+// 13. etc. pairs of variable names and values
 
 int type;
 const char* fx;
@@ -65,9 +66,7 @@ double f(double _x, double _y)
 #ifndef DUMMY
     return expression.value();
 #else
-    double r = sqrt(x*x+y*y);
-    double phi = atan2(y, x);
-    return (r) - (2.5 + (fmod((phi+M_PI+0.2), (M_PI/8))) * 2);
+    return 0.02/x-y;
 //     return y - sin(x);
 //     return r - 3;
 #endif
@@ -80,6 +79,15 @@ int get_color_area(double x, double y)
 
 int get_color_line(double x, double y)
 {
+//     double v = f(x, y);
+//     if (v < 0)
+//     {
+//         return 0;
+//     }
+//     else
+//     {
+//         return 1;
+//     }
     double* pdx = pd + 0;
     double* pdy = pd + 1;
     
@@ -166,6 +174,8 @@ int main(int argc, char** argv)
     symbol_table.add_constant("e", 2.718281828459045235360287);
     symbol_table.add_function("ln", ln);
     symbol_table.add_constants();
+    for (int i = 13; i + 1 < argc; i += 2)
+        symbol_table.add_constant(argv[i], atof(argv[i + 1]));
     exprtk::symbol_table<double> unknown_symbol_table;
     expression.register_symbol_table(unknown_symbol_table);
     expression.register_symbol_table(symbol_table);
@@ -176,14 +186,15 @@ int main(int argc, char** argv)
         {
             typedef exprtk::parser_error::type error_t;
             error_t error = parser.get_error(i);
-            fprintf(stderr, "Error[%02ld] Position: %02ld Type: [%14s] Msg: %s\n",
+            fprintf(stderr, "error {\"i\": %ld, \"position\": %ld, \"type\": \"%s\", \"message\": \"%s\"\n", 
                     i, error.token.position,
                     exprtk::parser_error::to_str(error.mode).c_str(),
                     error.diagnostic.c_str());
         }
         return 1;
     }    
-    
+
+    bool exit_with_error = false;
     std::vector<std::string> variable_list;
     unknown_symbol_table.get_variable_list(variable_list);
     for (auto& var_name : variable_list)
@@ -194,10 +205,12 @@ int main(int argc, char** argv)
             phi_ = &unknown_symbol_table.variable_ref(var_name);
         else
         {
-            cerr << "unknown variable: " << var_name << "\n";
-            exit(1);
+            fprintf(stderr, "unknown_var %s\n", var_name.c_str());
+            exit_with_error = true;
         }
     }
+    if (exit_with_error)
+        exit(1);
 #endif
 
     pd = (double*)malloc(sizeof(double) * 2 * np);
@@ -234,7 +247,7 @@ int main(int argc, char** argv)
         if (percent != old_percent)
         {
             old_percent = percent;
-            fprintf(stderr, "\r%d", percent);
+            fprintf(stderr, "progress %d\n", percent);
         }
         for (int x = 0; x <= width; x++)
             line1[x] = (*get_color)(xl + dx * x, yt + dy * y);
@@ -255,7 +268,6 @@ int main(int argc, char** argv)
         // swap lines
         int *temp = line0; line0 = line1; line1 = temp;
     }
-    fprintf(stderr, "\r%d\n", 100);
     
     free(scanlines);
     free(fb);
