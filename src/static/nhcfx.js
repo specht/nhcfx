@@ -147,6 +147,8 @@ $(document).ready(function() {
                  'r = 2.5 + ((phi+pi+0.2) % (pi/8)) * 2',
                  'r % 1 = 0.5 + cos(4phi) * 0.05 * r',
                  'phi = cos(r*3)*pi',
+                 '(5r) % (2pi) = phi + pi',
+                 '(2r^2) % (2pi) = phi + pi',
                  'phi = tan(3*r)/5',
                  'phi = cos(r*3)',
                  'atan2(y, abs(x)) = sin(r*3)^4',
